@@ -15,7 +15,8 @@ const useProductManagement = () => {
     try {
       const accessToken = getAccessToken()
       const currentUser = getCurrentUser()
-      const response = await axios.post(`${BACKEND_URI}/product/user/${currentUser.user_id}`)
+      const response = await axios.post(`${BACKEND_URI}/product/seller/${currentUser.user_id}`)
+      console.log(response)
       const productsWithFirstImage = response.data.map((product) => ({
         ...product,
         image: product.images && product.images.length > 0 ? product.images[0] : '',
