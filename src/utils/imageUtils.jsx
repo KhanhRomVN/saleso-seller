@@ -2,18 +2,25 @@ import { imageDB } from '~/firebase/firebaseConfig'
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { v4 as uuidv4 } from 'uuid'
 
-export const handleImageSelect = (event, setSelectedImage, setIsCropperOpen) => {
+export const handleImageSelect = (event, setSelectedImages, setIsModalOpen) => {
   if (event.target.files && event.target.files.length > 0) {
-    const reader = new FileReader()
-    reader.readAsDataURL(event.target.files[0])
-    reader.onload = () => {
-      setSelectedImage(reader.result)
-      setIsCropperOpen(true)
-    }
+    const filesArray = Array.from(event.target.files)
+    const readerPromises = filesArray.map((file) => {
+      return new Promise((resolve) => {
+        const reader = new FileReader()
+        reader.onload = (e) => resolve(e.target.result)
+        reader.readAsDataURL(file)
+      })
+    })
+
+    Promise.all(readerPromises).then((results) => {
+      setSelectedImages(results)
+      setIsModalOpen(true)
+    })
   }
 }
 
-export const cropImage = async (croppedAreaPixels, selectedImage) => {
+export const cropImageFile = async (croppedAreaPixels, selectedImage) => {
   if (!croppedAreaPixels || !selectedImage) return null
 
   const canvas = document.createElement('canvas')
@@ -49,8 +56,7 @@ export const cropImage = async (croppedAreaPixels, selectedImage) => {
   })
 }
 
-export const handleUploadCroppedImage = async (cropImage, selectedImage, croppedAreaPixels) => {
-  const croppedImage = await cropImage(croppedAreaPixels, selectedImage)
+export const handleUploadCroppedImage = async (croppedImage) => {
   const storageRef = ref(imageDB, `images/${uuidv4()}`)
 
   try {

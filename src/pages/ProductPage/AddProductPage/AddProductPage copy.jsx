@@ -4,21 +4,7 @@ import { Box, Typography, Divider, Button, CssBaseline, ThemeProvider, createThe
 import ProductTypeAndCategory from './components/ProductTypeAndCategory'
 import ProductDetails from './components/ProductDetails'
 import ImageUploadComponent from './components/ImageUploadComponent'
-import axios from 'axios'
-import { BACKEND_URI } from '~/API'
-
-const createProduct = async (productData) => {
-  const accessToken = localStorage.getItem('accessToken')
-  try {
-    const response = await axios.post(`${BACKEND_URI}/product/create`, productData, {
-      headers: { accessToken },
-    })
-    return response.data
-  } catch (error) {
-    console.error('Error creating product:', error)
-    throw error
-  }
-}
+import { createProduct } from '../utils/api'
 
 const AddProductPage = () => {
   const location = useLocation()
@@ -42,52 +28,19 @@ const AddProductPage = () => {
 
   const handleSubmit = async () => {
     try {
-      let fullProductData = {
+      const token = localStorage.getItem('token') // Assuming you store the token in localStorage
+      const fullProductData = {
         ...productData,
         categories: selectedCategories,
         images: images,
       }
-
-      // Function to check if an object is empty
-      const isEmptyObject = (obj) => Object.keys(obj).length === 0 && obj.constructor === Object
-
-      // Function to check if an array is empty or contains only empty objects
-      const isEmptyArray = (arr) =>
-        arr.length === 0 ||
-        arr.every(
-          (item) => (typeof item === 'object' && isEmptyObject(item)) || (typeof item === 'string' && item === ''),
-        )
-
-      // Function to clean object
-      const cleanObject = (obj) => {
-        Object.keys(obj).forEach((key) => {
-          if (obj[key] === null || obj[key] === '') {
-            delete obj[key]
-          } else if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
-            cleanObject(obj[key])
-            if (isEmptyObject(obj[key])) {
-              delete obj[key]
-            }
-          } else if (Array.isArray(obj[key])) {
-            obj[key] = obj[key].filter(
-              (item) =>
-                !(typeof item === 'object' && isEmptyObject(item)) && !(typeof item === 'string' && item === ''),
-            )
-            if (isEmptyArray(obj[key])) {
-              delete obj[key]
-            }
-          }
-        })
-      }
-
-      cleanObject(fullProductData)
-
-      console.log(fullProductData)
-      const response = await createProduct(fullProductData)
+      const response = await createProduct(fullProductData, token)
       console.log('Product created successfully:', response)
-      navigate('/product')
+      // Navigate to product list or show success message
+      navigate('/products')
     } catch (error) {
       console.error('Failed to create product:', error)
+      // Show error message to user
     }
   }
 
@@ -105,7 +58,6 @@ const AddProductPage = () => {
       >
         <Typography>Create a New Product</Typography>
         <Box>
-          <Button>Save Draft</Button>
           <Button onClick={() => navigate('/products')}>Cancel</Button>
           <Button onClick={handleSubmit}>Submit Product</Button>
         </Box>
