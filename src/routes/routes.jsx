@@ -11,6 +11,9 @@ import AddProductPage from '~/pages/ProductPage/AddProductPage/AddProductPage'
 import ManagementProductPage from '~/pages/ProductPage/ManagementProductPage/ManagementProductPage'
 import ProductEditPage from '~/pages/ProductPage/ProductEditPage/ProductEditPage'
 
+// Discount
+import DiscountManagementPage from '~/pages/DiscountPage/DiscountManagementPage/DiscountManagementPage'
+
 //* Admin Page
 
 //* Layout Component
@@ -58,6 +61,14 @@ const publicRoutes = [
     element: (
       <DefaultLayout>
         <ProductEditPage />
+      </DefaultLayout>
+    ),
+  },
+  {
+    path: '/discount-management',
+    element: (
+      <DefaultLayout>
+        <DiscountManagementPage />
       </DefaultLayout>
     ),
   },

@@ -25,30 +25,30 @@ const menuItems = [
   {
     category: 'Main Menu',
     items: [
-      { text: 'Overview', path: '/', icon: <DashboardOutlinedIcon sx={{ fontSize: '24px' }} /> },
+      { text: 'Overview', path: '/', icon: <DashboardOutlinedIcon sx={{ fontSize: '16px' }} /> },
       {
         text: 'Analytics',
         path: '/analytics',
-        icon: <AssessmentOutlinedIcon sx={{ fontSize: '24px' }} />,
+        icon: <AssessmentOutlinedIcon sx={{ fontSize: '16px' }} />,
       },
-      { text: 'Product', path: '/product', icon: <StoreOutlinedIcon sx={{ fontSize: '24px' }} /> },
-      { text: 'Sales', path: '/sales', icon: <AttachMoneyOutlinedIcon sx={{ fontSize: '24px' }} /> },
+      { text: 'Product', path: '/product', icon: <StoreOutlinedIcon sx={{ fontSize: '16px' }} /> },
+      { text: 'Discount', path: '/discount-management', icon: <AttachMoneyOutlinedIcon sx={{ fontSize: '16px' }} /> },
     ],
   },
   {
     category: 'Transaction',
     items: [
-      { text: 'Payment', path: '/payment', icon: <PaymentOutlinedIcon sx={{ fontSize: '24px' }} /> },
-      { text: 'Refunds', path: '/refunds', icon: <RestoreOutlinedIcon sx={{ fontSize: '24px' }} /> },
+      { text: 'Payment', path: '/payment', icon: <PaymentOutlinedIcon sx={{ fontSize: '16px' }} /> },
+      { text: 'Refunds', path: '/refunds', icon: <RestoreOutlinedIcon sx={{ fontSize: '16px' }} /> },
       {
         text: 'Invoices',
         path: '/invoices',
-        icon: <ReceiptOutlinedIcon sx={{ fontSize: '24px' }} />,
+        icon: <ReceiptOutlinedIcon sx={{ fontSize: '16px' }} />,
       },
       {
         text: 'Returns',
         path: '/returns',
-        icon: <KeyboardReturnOutlinedIcon sx={{ fontSize: '24px' }} />,
+        icon: <KeyboardReturnOutlinedIcon sx={{ fontSize: '16px' }} />,
       },
     ],
   },
@@ -58,17 +58,17 @@ const menuItems = [
       {
         text: 'Notification',
         path: '/notification',
-        icon: <NotificationsOutlinedIcon sx={{ fontSize: '24px' }} />,
+        icon: <NotificationsOutlinedIcon sx={{ fontSize: '16px' }} />,
       },
       {
         text: 'Feedback',
         path: '/feedback',
-        icon: <FeedbackOutlinedIcon sx={{ fontSize: '24px' }} />,
+        icon: <FeedbackOutlinedIcon sx={{ fontSize: '16px' }} />,
       },
       {
         text: 'Setting',
         path: '/setting',
-        icon: <SettingsOutlinedIcon sx={{ fontSize: '24px' }} />,
+        icon: <SettingsOutlinedIcon sx={{ fontSize: '16px' }} />,
       },
     ],
   },
@@ -94,117 +94,123 @@ const Sidebar = () => {
         top: 0,
         bottom: '0',
         left: '0',
-        zIndex: '999',
+        zIndex: '998',
       }}
     >
-      <Box sx={{ height: '61px', display: 'flex', alignItems: 'center', paddingLeft: '26px' }}>
+      <Box sx={{ height: '61px', display: 'flex', alignItems: 'center', paddingLeft: '16px' }}>
         <img
-          src="https://i.ibb.co/BrWdqfq/Brandmark-make-your-logo-in-minutes.png"
+          src="https://i.ibb.co/CMSJMK3/Brandmark-make-your-logo-in-minutes-removebg-preview.png"
           alt="logo"
           style={{ objectFit: 'cover', height: '60%' }}
         />
       </Box>
-      <List
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          height: '100%',
-          position: 'relative',
-          boxSizing: 'border-box',
-          padding: '14px',
-        }}
-      >
-        <Box>
-          {menuItems.map((menuItem, index) => (
-            <div key={index}>
-              <Typography
-                variant="subtitle1"
-                sx={{
-                  marginTop: index !== 0 ? '10px' : '0',
-                  fontSize: '12px',
-                }}
-              >
-                {menuItem.category}
-              </Typography>
-              {menuItem.items.map((item, subIndex) => (
-                <ListItem
-                  button
-                  component={Link}
-                  to={item.path}
-                  key={subIndex}
+
+      <Divider />
+      <Box sx={{ display: 'flex', height: 'calc(100% - 61px)' }}>
+        <List
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            height: '100%',
+            position: 'relative',
+            boxSizing: 'border-box',
+            padding: '14px',
+            flexGrow: 1,
+          }}
+        >
+          <Box>
+            {menuItems.map((menuItem, index) => (
+              <div key={index}>
+                <Typography
+                  variant="subtitle1"
                   sx={{
-                    padding: '4px 80px 4px 16px',
-                    '&:hover': {
-                      backgroundColor: (theme) => theme.other.primaryColor,
-                    },
-                    backgroundColor:
-                      location.pathname === item.path ? (theme) => theme.palette.hoverColor.primary : 'inherit',
-                    borderRadius: '10px',
-                    display: 'flex',
-                    alignItems: 'center',
+                    marginTop: index !== 0 ? '10px' : '0',
+                    fontSize: '12px',
                   }}
                 >
-                  <ListItemIcon
+                  {menuItem.category}
+                </Typography>
+                {menuItem.items.map((item, subIndex) => (
+                  <ListItem
+                    button
+                    component={Link}
+                    to={item.path}
+                    key={subIndex}
                     sx={{
-                      minWidth: 'auto',
-                      marginRight: '10px',
-                      color: location.pathname === item.path ? (theme) => theme.palette.textColor.primary : 'inherit',
+                      padding: '4px 70px 4px 16px',
+                      '&:hover': {
+                        backgroundColor: (theme) => theme.other.primaryColor,
+                      },
+                      backgroundColor:
+                        location.pathname === item.path ? (theme) => theme.palette.hoverColor.primary : 'inherit',
+                      borderRadius: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
                     }}
                   >
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={item.text}
-                    primaryTypographyProps={{
-                      fontSize: '0.88rem',
-                      color: location.pathname === item.path ? (theme) => theme.palette.textColor.primary : 'inherit',
-                    }}
-                  />
-                </ListItem>
-              ))}
-            </div>
-          ))}
-        </Box>
-        <Box>
-          <Divider />
-          <ListItem
-            button
-            onClick={handleLogout}
-            sx={{
-              padding: '4px 16px',
-              borderRadius: '10px',
-              '&:hover': {
-                backgroundColor: (theme) => theme.other.primaryColor,
-              },
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <ListItemIcon
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 'auto',
+                        marginRight: '10px',
+                        color: location.pathname === item.path ? (theme) => theme.palette.textColor.primary : 'inherit',
+                      }}
+                    >
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={item.text}
+                      primaryTypographyProps={{
+                        fontSize: '0.88rem',
+                        color: location.pathname === item.path ? (theme) => theme.palette.textColor.primary : 'inherit',
+                      }}
+                    />
+                  </ListItem>
+                ))}
+              </div>
+            ))}
+          </Box>
+          <Box>
+            <Divider />
+            <ListItem
+              button
+              onClick={handleLogout}
               sx={{
-                minWidth: 'auto',
-                marginRight: '10px',
-                fontSize: '30px',
+                padding: '4px 16px',
+                borderRadius: '10px',
+                '&:hover': {
+                  backgroundColor: (theme) => theme.other.primaryColor,
+                },
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
-              <ExitToAppOutlinedIcon
+              <ListItemIcon
                 sx={{
+                  minWidth: 'auto',
+                  marginRight: '10px',
+                  fontSize: '30px',
+                }}
+              >
+                <ExitToAppOutlinedIcon
+                  sx={{
+                    color: 'inherit',
+                  }}
+                  fontSize="small"
+                />
+              </ListItemIcon>
+              <ListItemText
+                primary="Logout"
+                primaryTypographyProps={{
+                  fontSize: '0.85rem',
                   color: 'inherit',
                 }}
-                fontSize="small"
               />
-            </ListItemIcon>
-            <ListItemText
-              primary="Logout"
-              primaryTypographyProps={{
-                fontSize: '0.85rem',
-                color: 'inherit',
-              }}
-            />
-          </ListItem>
-        </Box>
-      </List>
+            </ListItem>
+          </Box>
+        </List>
+        <Divider orientation="vertical" flexItem />
+      </Box>
     </Box>
   )
 }

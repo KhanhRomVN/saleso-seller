@@ -19,7 +19,7 @@ const DefaultLayout = ({ children }) => {
       <Box
         sx={{
           boxSizing: 'border-box',
-          padding: '0 0 0rem 230px',
+          padding: '60px 0 0rem 212px',
           width: '100%',
           display: 'flex',
           justifyContent: 'center',
