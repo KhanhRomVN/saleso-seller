@@ -142,7 +142,7 @@ const LoginPage = () => {
         </Box>
       </Box>
       <Box sx={{ display: 'flex', marginTop: '10px', gap: '10px', flexDirection: 'column', alignItems: 'center' }}>
-        <Typography sx={{ color: (theme) => theme.palette.textColor.secondary }}>Don't have an account?</Typography>
+        <Typography sx={{ color: (theme) => theme.palette.textColor.secondary }}>Dont have an account?</Typography>
         <Typography sx={{ color: (theme) => theme.other.primaryColor, cursor: 'pointer' }} onClick={navigateToRegister}>
           Register here
         </Typography>
