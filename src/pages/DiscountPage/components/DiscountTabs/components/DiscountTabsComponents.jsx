@@ -319,9 +319,9 @@ const DiscountDetailModal = ({ visible, onClose, discount, onUpdateDiscount }) =
               <Card size="small" title="Discount Details">
                 <Space direction="vertical" size="small">
                   <Text>
-                    <TagOutlined /> Code: {discount.code}
+                    <TagOutlined /> Code:
                   </Text>
-                  <Text>
+                  {/* <Text>
                     <PercentageOutlined /> Type: {discount.type}
                   </Text>
                   <Text>
@@ -348,15 +348,15 @@ const DiscountDetailModal = ({ visible, onClose, discount, onUpdateDiscount }) =
                   </Text>
                   <Text>
                     <TagOutlined /> Status: {discount.status}
-                  </Text>
+                  </Text> */}
                 </Space>
               </Card>
-              <Card size="small">
+              {/* <Card size="small">
                 <Space>
                   <Text strong>Active: </Text>
                   <Switch checked={discount.isActive} onChange={handleToggleActive} />
                 </Space>
-              </Card>
+              </Card> */}
             </Space>
           </Card>
         </Col>

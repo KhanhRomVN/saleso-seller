@@ -5,6 +5,7 @@ import Header from './components/Header'
 import DiscountForm from './components/DiscountForm'
 import DiscountStats from './components/DiscountStats'
 import DiscountTabs from './components/DiscountTabs/DiscountTabs'
+import DiscountProduct from './components/DiscountProduct/DiscountProduct'
 import NavigationBar from './components/NavigationBar'
 
 import { useTheme } from './hooks/useTheme'
@@ -24,6 +25,7 @@ const DiscountManagementPage = () => {
         <NavigationBar handleOpen={handleOpen} mode={mode} />
         <Divider style={{ borderColor: mode === 'dark' ? '#303030' : '#e8e8e8' }} />
         <DiscountTabs />
+        <DiscountProduct />
         <DiscountForm open={open} handleClose={handleClose} />
       </Box>
     </ConfigProvider>

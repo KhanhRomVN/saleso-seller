@@ -23,19 +23,6 @@ const DiscountForm = ({ open, handleClose }) => {
     }
   }, [startDate, discountType, form])
 
-  // useEffect(() => {
-  //   if (startDate && discountType === 'flash-sale') {
-  //     const startMoment = moment(startDate)
-  //     const endDateTime = startMoment.clone().add(1, 'hour')
-
-  //     console.log('Start date:', startMoment)
-  //     console.log('End date:', endDateTime)
-
-  //     setEndDate(endDateTime.toDate())
-  //     form.setFieldsValue({ endDate: endDateTime.toDate() })
-  //   }
-  // }, [startDate, discountType, form])
-
   const disabledDate = (current) => {
     return current && current < moment().startOf('day')
   }

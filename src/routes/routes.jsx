@@ -12,7 +12,7 @@ import ManagementProductPage from '~/pages/ProductPage/ManagementProductPage/Man
 import ProductEditPage from '~/pages/ProductPage/ProductEditPage/ProductEditPage'
 
 // Discount
-import DiscountManagementPage from '~/pages/DiscountPage/DiscountManagementPage/DiscountManagementPage'
+import DiscountManagementPage from '~/pages/DiscountPage/DiscountManagementPage'
 
 //* Admin Page
 
