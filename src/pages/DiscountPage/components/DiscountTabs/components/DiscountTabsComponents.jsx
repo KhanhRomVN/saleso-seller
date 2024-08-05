@@ -279,10 +279,12 @@ const DiscountDetailModal = ({ visible, onClose, discount, onUpdateDiscount }) =
       key: 'applyDiscount',
       render: (text, record) => {
         let isChecked = false
-        if (discount.status === 'upcoming') {
-          isChecked = record.upcoming_discounts?.includes(discount._id.toString())
-        } else if (discount.status === 'ongoing') {
-          isChecked = record.applied_discounts?.includes(discount._id)
+        if (
+          record.upcoming_discounts?.includes(discount._id.toString()) ||
+          record.ongoing_discounts?.includes(discount._id.toString()) ||
+          record.expired_discounts?.includes(discount._id.toString())
+        ) {
+          isChecked = true
         }
         return (
           <Switch

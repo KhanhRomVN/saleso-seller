@@ -34,11 +34,7 @@ const DiscountProduct = () => {
         algorithm: mode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
       }}
     >
-      <Space
-        direction="vertical"
-        size="large"
-        style={{ width: '100%', background: token.colorBgContainer, padding: token.padding }}
-      >
+      <Space direction="vertical" size="large" style={{ width: '100%', background: token.colorBgContainer }}>
         <Title level={4} style={{ color: token.colorTextHeading }}>
           Product Discounts
         </Title>
