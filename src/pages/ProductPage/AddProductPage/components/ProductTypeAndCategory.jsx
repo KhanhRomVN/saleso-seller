@@ -1,36 +1,58 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Typography, IconButton, Tooltip, Button, Divider } from '@mui/material'
-import { Modal } from 'antd'
+import { Typography, Divider, Button, Space, Row, Col, Modal, Card, Tag, message, Tree } from 'antd'
+import { LeftOutlined, RightOutlined, CloseOutlined, PlusOutlined } from '@ant-design/icons'
 import axios from 'axios'
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew'
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'
-import CloseIcon from '@mui/icons-material/Close'
-import CategoryIcon from '@mui/icons-material/Category'
-import CategorySelectionModal from './CategorySelectionModal'
-import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket'
-import LaptopIcon from '@mui/icons-material/Laptop'
-import HomeIcon from '@mui/icons-material/Home'
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter'
-import ChildCareIcon from '@mui/icons-material/ChildCare'
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
-import MenuBookIcon from '@mui/icons-material/MenuBook'
-import LocalGroceryStoreIcon from '@mui/icons-material/LocalGroceryStore'
-import PetsIcon from '@mui/icons-material/Pets'
-import ToysIcon from '@mui/icons-material/Toys'
 
-// Import your icon map here
+const { Title, Text } = Typography
+
 const iconMap = {
-  Fashion: ShoppingBasketIcon,
-  'Electronics & Technology': LaptopIcon,
-  'Home & Living': HomeIcon,
-  'Health & Beauty': FitnessCenterIcon,
-  'Sports & Travel': FitnessCenterIcon,
-  'Mom & Baby': ChildCareIcon,
-  'Auto & Motorcycle': DirectionsCarIcon,
-  'Books & Stationery': MenuBookIcon,
-  'Groceries & Essentials': LocalGroceryStoreIcon,
-  'Pet Supplies': PetsIcon,
-  'Toys & Games': ToysIcon,
+  Fashion: '👚',
+  'Electronics & Technology': '💻',
+  'Home & Living': '🏠',
+  'Health & Beauty': '💆',
+  'Sports & Travel': '🏋️',
+  'Mom & Baby': '👶',
+  'Auto & Motorcycle': '🚗',
+  'Books & Stationery': '📚',
+  'Groceries & Essentials': '🛒',
+  'Pet Supplies': '🐾',
+  'Toys & Games': '🎲',
+}
+
+const CategorySelectionModal = ({ open, onClose, onSubmit, initialCategory }) => {
+  const [treeData, setTreeData] = useState([])
+  const [selectedCategories, setSelectedCategories] = useState([])
+
+  useEffect(() => {
+    if (open) {
+      fetchCategoryTree()
+    }
+  }, [open])
+
+  const fetchCategoryTree = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8080/category/tree/${initialCategory}`)
+      setTreeData(response.data)
+    } catch (error) {
+      console.error('Error fetching category tree:', error)
+      message.error('Failed to fetch category tree')
+    }
+  }
+
+  const onSelect = (selectedKeys, info) => {
+    setSelectedCategories(info.selectedNodes)
+  }
+
+  const handleSubmit = () => {
+    onSubmit(selectedCategories)
+    onClose()
+  }
+
+  return (
+    <Modal title="Select Additional Categories" visible={open} onCancel={onClose} onOk={handleSubmit} width={600}>
+      <Tree checkable onSelect={onSelect} treeData={treeData} />
+    </Modal>
+  )
 }
 
 const ProductTypeAndCategory = ({ selectedCategoryNames, onCategoryChange }) => {
@@ -58,6 +80,7 @@ const ProductTypeAndCategory = ({ selectedCategoryNames, onCategoryChange }) => 
       }
     } catch (error) {
       console.error('Error fetching categories:', error)
+      message.error('Failed to fetch categories')
     }
   }
 
@@ -115,120 +138,69 @@ const ProductTypeAndCategory = ({ selectedCategoryNames, onCategoryChange }) => 
 
   return (
     <>
-      {/* Product Type */}
-      <Box sx={{ backgroundColor: (theme) => theme.palette.backgroundColor.secondary, padding: '8px' }}>
-        <Typography>Product Type</Typography>
-        <Divider />
-        {/* Slider Product Type */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px' }}>
-          <IconButton onClick={handlePrev} disabled={startIndex === 0} sx={{ borderRadius: '6px', padding: '6px' }}>
-            <ArrowBackIosNewIcon sx={{ fontSize: '16px' }} />
-          </IconButton>
-          <Box sx={{ display: 'flex', overflow: 'hidden', width: '90%', gap: '10px' }}>
-            {categories.slice(startIndex, startIndex + 4).map((category) => {
-              const IconComponent = iconMap[category.name] || CategoryIcon
-              return (
-                <Tooltip key={category._id} title={`${category.name} (${category.number_product})`}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'start',
-                      justifyContent: 'center',
-                      width: '25%',
-                      height: 'auto',
-                      padding: '10px',
-                      cursor: 'pointer',
-                      border: selectedCategory?._id === category._id ? '1px solid #318CE7' : 'none',
-                      backgroundColor: '#111315',
-                      '&:hover': { backgroundColor: 'action.hover' },
-                    }}
-                    onClick={() => handleCategorySelect(category)}
-                  >
-                    <IconComponent color="primary" sx={{ fontSize: '20px', marginBottom: '20px', color: '#fff' }} />
-                    <Typography
-                      sx={{
-                        maxWidth: '100%',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        fontSize: '14px',
-                      }}
-                    >
-                      {category.name}
-                    </Typography>
-                    <Typography sx={{ fontSize: '12px', color: 'gray' }}>{category.number_product} items</Typography>
-                  </Box>
-                </Tooltip>
-              )
-            })}
-          </Box>
-          <IconButton
-            onClick={handleNext}
-            disabled={startIndex >= categories.length - 4}
-            sx={{ borderRadius: '6px', padding: '6px' }}
-          >
-            <ArrowForwardIosIcon sx={{ fontSize: '16px' }} />
-          </IconButton>
-        </Box>
-      </Box>
-
-      {/* Product Categories */}
-      <Box
-        sx={{ backgroundColor: (theme) => theme.palette.backgroundColor.secondary, padding: '8px', marginTop: '10px' }}
+      <Card
+        title="Product Type"
+        extra={
+          <Space>
+            <Button icon={<LeftOutlined />} onClick={handlePrev} disabled={startIndex === 0} />
+            <Button icon={<RightOutlined />} onClick={handleNext} disabled={startIndex >= categories.length - 4} />
+          </Space>
+        }
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography>Product Categories</Typography>
-          <Box>
-            <Button onClick={handleAddCategory} disabled={selectedCategories.length !== 1}>
-              Add Category
-            </Button>
-          </Box>
-        </Box>
-        <Divider />
-        {/* Selected Categories */}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '8px 0' }}>
-          {selectedCategories.map((category, index) => (
-            <Box
-              key={index}
-              sx={{
-                padding: '4px 8px',
-                display: 'flex',
-                backgroundColor: (theme) => theme.palette.backgroundColor.primary,
-                alignItems: 'center',
-                gap: '4px',
-              }}
-            >
-              <Typography sx={{ fontSize: '16px' }}>{category}</Typography>
-              {index !== 0 && (
-                <CloseIcon
-                  sx={{
-                    fontSize: '18px',
-                    padding: '2px',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      backgroundColor: '#318CE7',
-                    },
-                  }}
-                  onClick={() => handleDeleteCategory(category)}
-                />
-              )}
-            </Box>
+        <Row gutter={[16, 16]}>
+          {categories.slice(startIndex, startIndex + 4).map((category) => (
+            <Col span={6} key={category._id}>
+              <Card
+                hoverable
+                onClick={() => handleCategorySelect(category)}
+                style={{
+                  borderColor: selectedCategory?._id === category._id ? '#1890ff' : 'transparent',
+                  textAlign: 'center',
+                }}
+              >
+                <Text style={{ fontSize: '24px' }}>{iconMap[category.name] || '🔹'}</Text>
+                <Divider />
+                <Text strong>{category.name}</Text>
+                <br />
+                <Text type="secondary">{category.number_product} items</Text>
+              </Card>
+            </Col>
           ))}
-        </Box>
-      </Box>
+        </Row>
+      </Card>
 
-      {/* Change Type Confirmation Modal */}
+      <Card
+        title="Product Categories"
+        extra={
+          <Button onClick={handleAddCategory} disabled={selectedCategories.length !== 1} icon={<PlusOutlined />}>
+            Add Category
+          </Button>
+        }
+        style={{ marginTop: '16px' }}
+      >
+        <Space wrap>
+          {selectedCategories.map((category, index) => (
+            <Tag
+              key={index}
+              closable={index !== 0}
+              onClose={() => handleDeleteCategory(category)}
+              color={index === 0 ? 'blue' : 'default'}
+            >
+              {category}
+            </Tag>
+          ))}
+        </Space>
+      </Card>
+
       <Modal
         title="Change Product Type"
-        open={isChangeTypeModalVisible}
+        visible={isChangeTypeModalVisible}
         onOk={handleChangeTypeConfirm}
         onCancel={handleChangeTypeCancel}
       >
         <p>Are you sure you want to change the product type? This will reset your category selection.</p>
       </Modal>
 
-      {/* Category Selection Modal */}
       <CategorySelectionModal
         open={isCategorySelectionModalOpen}
         onClose={() => setIsCategorySelectionModalOpen(false)}

@@ -1,94 +1,92 @@
 import React from 'react'
-import { DataGrid } from '@mui/x-data-grid'
-import { Box, Button, IconButton } from '@mui/material'
-import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined'
-import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
+import { Table, Button, Space, Image } from 'antd'
+import { DeleteOutlined, MoreOutlined } from '@ant-design/icons'
+import { ThemeProvider, createTheme } from '@mui/material/styles'
+import CssBaseline from '@mui/material/CssBaseline'
 
 const ProductList = ({ products, onDeleteClick, onMoreClick }) => {
-  console.log(products)
-  const getMaxPrice = (attributes) => {
-    if (!attributes) return 0
-    return Math.max(...Object.values(attributes).flatMap((attr) => attr.map((item) => parseFloat(item.price))))
-  }
+  const mode = localStorage.getItem('mui-mode') || 'light'
+
+  const theme = React.useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode,
+        },
+      }),
+    [mode],
+  )
 
   const columns = [
-    { field: 'id', headerName: 'ID', flex: 1 },
     {
-      field: 'name',
-      headerName: 'Name',
-      flex: 1,
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <img src={params.row.image} alt={params.row.name} style={{ width: 40, height: 40, marginRight: 8 }} />
-          {params.row.name}
-        </Box>
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+    },
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text, record) => (
+        <Space>
+          <Image src={record.image} alt={text} width={40} height={40} />
+          {text}
+        </Space>
       ),
     },
-    { field: 'country', headerName: 'Country', flex: 1 },
-    { field: 'categories', headerName: 'Categories', flex: 1 },
-
-    { field: 'sold', headerName: 'Sold', flex: 0.5 },
     {
-      field: 'is_active',
-      headerName: 'Status',
-      flex: 0.5,
-      renderCell: (params) => (
-        <Button
-          variant="contained"
-          style={{
-            backgroundColor: params.value === 'Y' ? '#DE3163' : '#31ae60',
-            color: 'white',
-            padding: '1px 3px',
-            fontSize: '11px',
-          }}
-        >
-          {params.value === 'Y' ? 'Active' : 'Non Active'}
+      title: 'Country',
+      dataIndex: 'country',
+      key: 'country',
+    },
+    {
+      title: 'Categories',
+      dataIndex: 'categories',
+      key: 'categories',
+    },
+    {
+      title: 'Sold',
+      dataIndex: 'sold',
+      key: 'sold',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'is_active',
+      key: 'is_active',
+      render: (is_active) => (
+        <Button type={is_active === 'Y' ? 'danger' : 'primary'} size="small">
+          {is_active === 'Y' ? 'Active' : 'Non Active'}
         </Button>
       ),
     },
-    // ... (rest of the columns remain the same)
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_, record) => (
+        <Space size="middle">
+          <Button icon={<DeleteOutlined />} onClick={() => onDeleteClick(record.id)} type="text" danger />
+          <Button icon={<MoreOutlined />} onClick={(e) => onMoreClick(e, record.id)} type="text" />
+        </Space>
+      ),
+    },
   ]
 
-  const rows = products.map((product) => ({
+  const dataSource = products.map((product) => ({
+    key: product._id,
     id: product._id,
     name: product.name,
     image: product.images[0],
     country: product.countryOfOrigin,
     categories: product.categories.join(', '),
-    attributes: product.attributes,
     sold: product.units_sold,
     is_active: product.is_active,
   }))
 
   return (
-    <Box sx={{ height: 400, width: '100%', padding: '0px' }}>
-      <DataGrid
-        rows={rows}
-        columns={columns}
-        pageSize={5}
-        rowsPerPageOptions={[5]}
-        getRowClassName={(params) => (params.indexRelativeToCurrentPage % 2 === 0 ? 'even-row' : 'odd-row')}
-        rowHeight={50} // Giảm chiều cao hàng
-        sx={{
-          '& .odd-row': {
-            backgroundColor: '#1a1d1f',
-          },
-          '& .even-row': {
-            backgroundColor: '#111315',
-          },
-          '& .MuiDataGrid-cell': {
-            fontSize: '0.875rem', // Giảm kích thước font chữ
-            padding: '0 8px', // Giảm padding
-          },
-          '& .MuiDataGrid-columnHeaders': {
-            height: '48px', // Giảm chiều cao header
-          },
-          '& .MuiDataGrid-columnHeaderTitle': {
-            fontSize: '0.9rem', // Giảm kích thước font chữ của header
-          },
-        }}
-      />
-    </Box>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Table columns={columns} dataSource={dataSource} pagination={{ pageSize: 5 }} scroll={{ x: true }} />
+    </ThemeProvider>
   )
 }
 

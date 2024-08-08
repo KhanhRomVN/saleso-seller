@@ -1,36 +1,38 @@
 import React, { useState } from 'react'
-import { Box, Typography, Button } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
+import { Layout, Typography, Button, Card, Row, Col } from 'antd'
+import { PlusOutlined } from '@ant-design/icons'
 import ProductList from './components/ProductList'
-import DeleteConfirmationDialog from './components/DeleteConfirmationDialog'
-import ProductActionMenu from './components/ProductActionMenu'
+import DeleteConfirmationModal from './components/DeleteConfirmationModal'
+import ProductActionDropdown from './components/ProductActionDropdown'
 import useProductManagement from './hooks/useProductManagement'
-import CategorySelectionDialog from './components/CategorySelectionDialog'
+import CategorySelectionModal from './components/CategorySelectionModal'
+
+const { Content } = Layout
+const { Title } = Typography
 
 const ManagementProductPage = () => {
   const navigate = useNavigate()
   const {
     products,
-    openDialog,
+    openModal,
     productToDelete,
-    anchorEl,
     selectedProductId,
     handleDeleteClick,
-    handleCloseDialog,
+    handleCloseModal,
     handleConfirmDelete,
     handleMoreClick,
-    handleMenuClose,
     handleMenuItemClick,
   } = useProductManagement()
 
-  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false)
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false)
 
   const handleAddNewProduct = () => {
-    setCategoryDialogOpen(true)
+    setCategoryModalOpen(true)
   }
 
-  const handleCategoryDialogClose = () => {
-    setCategoryDialogOpen(false)
+  const handleCategoryModalClose = () => {
+    setCategoryModalOpen(false)
   }
 
   const handleCategorySubmit = (selectedCategories) => {
@@ -39,96 +41,39 @@ const ManagementProductPage = () => {
   }
 
   return (
-    <Box
-      sx={{
-        boxSizing: 'border-box',
-        padding: '14px',
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px',
-      }}
-    >
-      <Box sx={{ width: '100%', height: '120px', display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
-        <Box
-          sx={{
-            height: '100%',
-            width: '24%',
-            borderRadius: '8px',
-            backgroundColor: (theme) => theme.palette.backgroundColor.secondary,
-          }}
-        ></Box>
-        <Box
-          sx={{
-            height: '100%',
-            width: '24%',
-            borderRadius: '8px',
-            backgroundColor: (theme) => theme.palette.backgroundColor.secondary,
-          }}
-        ></Box>
-        <Box
-          sx={{
-            height: '100%',
-            width: '24%',
-            borderRadius: '8px',
-            backgroundColor: (theme) => theme.palette.backgroundColor.secondary,
-          }}
-        ></Box>
-        <Box
-          sx={{
-            height: '100%',
-            width: '24%',
-            borderRadius: '8px',
-            backgroundColor: (theme) => theme.palette.backgroundColor.secondary,
-          }}
-        ></Box>
-      </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          boxSizing: 'border-box',
-          padding: '10px',
-          backgroundColor: (theme) => theme.palette.backgroundColor.secondary,
-          borderRadius: '10px',
-          gap: '14px',
-        }}
-      >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography sx={{ fontSize: '18px', fontWeight: '600' }}>List Product</Typography>
-          <Button
-            variant="contained"
-            sx={{
-              color: '#fff',
-              backgroundColor: (theme) => theme.other.primaryColor,
-              border: (theme) => `${theme.other.primaryColor} 1px solid`,
-              padding: '2px 8px',
-              fontSize: '12px',
-              borderRadius: '8px',
-              '&:hover': {
-                backgroundColor: (theme) => theme.palette.backgroundColor.primary,
-              },
-            }}
-            onClick={handleAddNewProduct}
-          >
-            Add New Product
-          </Button>
-        </Box>
-        <ProductList products={products} onDeleteClick={handleDeleteClick} onMoreClick={handleMoreClick} />
-      </Box>
-      <DeleteConfirmationDialog open={openDialog} onClose={handleCloseDialog} onConfirm={handleConfirmDelete} />
-      <ProductActionMenu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        onItemClick={handleMenuItemClick}
-      />
-      <CategorySelectionDialog
-        open={categoryDialogOpen}
-        onClose={handleCategoryDialogClose}
-        onSubmit={handleCategorySubmit}
-      />
-    </Box>
+    <Layout style={{ backgroundColor: '#111315' }}>
+      <Content style={{ padding: '16px' }}>
+        <Row gutter={[16, 16]}>
+          {[1, 2, 3, 4].map((key) => (
+            <Col key={key} xs={24} sm={12} md={6}>
+              <Card hoverable>
+                <Card.Meta title={`Statistic ${key}`} description="Description" />
+              </Card>
+            </Col>
+          ))}
+        </Row>
+        <Card style={{ marginTop: '16px' }}>
+          <Row justify="space-between" align="middle" style={{ marginBottom: '16px' }}>
+            <Title level={4}>List Product</Title>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddNewProduct}>
+              Add New Product
+            </Button>
+          </Row>
+          <ProductList products={products} onDeleteClick={handleDeleteClick} onMoreClick={handleMoreClick} />
+        </Card>
+        <DeleteConfirmationModal open={openModal} onClose={handleCloseModal} onConfirm={handleConfirmDelete} />
+        <ProductActionDropdown
+          visible={Boolean(selectedProductId)}
+          onVisibleChange={() => handleMoreClick(null)}
+          onItemClick={handleMenuItemClick}
+        />
+        <CategorySelectionModal
+          open={categoryModalOpen}
+          onClose={handleCategoryModalClose}
+          onSubmit={handleCategorySubmit}
+        />
+      </Content>
+    </Layout>
   )
 }
 

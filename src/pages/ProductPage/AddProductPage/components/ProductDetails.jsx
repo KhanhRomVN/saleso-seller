@@ -1,7 +1,23 @@
 import React, { useState, useEffect } from 'react'
-import { Divider, Space, Row, Col, Input, Switch, Button, ConfigProvider, theme, Modal } from 'antd'
-import { Box, Typography, Grid } from '@mui/material'
-import { InfoCircleOutlined } from '@ant-design/icons'
+import { ConfigProvider, theme } from 'antd'
+import {
+  Typography,
+  Divider,
+  Input,
+  Switch,
+  Button,
+  Space,
+  Row,
+  Col,
+  Modal,
+  Checkbox,
+  Form,
+  InputNumber,
+  message,
+  Card,
+  Tooltip,
+} from 'antd'
+import { InfoCircleOutlined, PlusOutlined, MinusCircleOutlined } from '@ant-design/icons'
 
 const { Title, Text } = Typography
 const { defaultAlgorithm, darkAlgorithm } = theme
@@ -20,130 +36,55 @@ const categoryAttributes = {
   'Toys & Games': ['Age Range', 'Material', 'Color', 'Number of Pieces', 'Educational Value'],
 }
 
-const attributeDescriptions = {}
-
-function checkEqualQuantities(attributes) {
-  if (Object.keys(attributes).length === 0) {
-    return true
-  }
-
-  const totals = Object.values(attributes).map((attr) =>
-    attr.reduce((sum, item) => sum + (parseInt(item.quantity) || 0), 0),
-  )
-
-  const firstTotal = totals[0]
-  return totals.every((total) => total === firstTotal)
+const attributeDescriptions = {
+  Size: 'Product dimensions or clothing size',
+  Color: 'Available colors for the product',
+  Material: 'Main materials used in the product',
+  // Add more descriptions as needed
 }
 
 const ProductDetails = ({ category, onDetailsChange }) => {
-  const [name, setName] = useState('')
-  const [brand, setBrand] = useState('')
-  const [countryOfOrigin, setCountryOfOrigin] = useState('')
-  const [isHandmade, setIsHandmade] = useState(false)
-  const [attributes, setAttributes] = useState({})
-  const [commonAttributes, setCommonAttributes] = useState([])
-  const [themeMode, setThemeMode] = useState('light')
+  const [form] = Form.useForm()
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [selectedAttributes, setSelectedAttributes] = useState([])
-  const [isQuantityValid, setIsQuantityValid] = useState(true)
-  const [price, setPrice] = useState('')
-  const [stock, setStock] = useState('')
-
-  useEffect(() => {
-    const productDetails = {
-      name,
-      brand,
-      countryOfOrigin,
-      isHandmade,
-      attributes,
-      commonAttributes,
-      price,
-      stock,
-    }
-    onDetailsChange(productDetails)
-  }, [name, brand, countryOfOrigin, isHandmade, attributes, commonAttributes, price, stock, onDetailsChange])
-
-  const hasDiverseAttributes = Object.keys(attributes).length > 0
+  const [themeMode, setThemeMode] = useState('light')
 
   useEffect(() => {
     const storedMode = localStorage.getItem('mui-mode')
-    if (storedMode === 'dark' || storedMode === 'light') {
-      setThemeMode(storedMode)
-    }
-  }, [])
+    setThemeMode(storedMode === 'dark' ? 'dark' : 'light')
 
-  useEffect(() => {
-    if (category && categoryAttributes[category]) {
+    if (category) {
+      form.resetFields()
       setSelectedAttributes([])
-      setAttributes({})
-      setPrice('')
-      setStock('')
     }
-  }, [category])
+  }, [category, form])
 
-  useEffect(() => {
-    setIsQuantityValid(checkEqualQuantities(attributes))
-  }, [attributes])
-
-  const handleAttributeChange = (attribute, index, field, value) => {
-    setAttributes((prev) => ({
-      ...prev,
-      [attribute]: prev[attribute].map((item, i) => (i === index ? { ...item, [field]: value } : item)),
-    }))
+  const onFinish = (values) => {
+    const productDetails = {
+      ...values,
+      attributes: selectedAttributes.reduce((acc, attr) => {
+        acc[attr] = values[attr] || []
+        return acc
+      }, {}),
+    }
+    onDetailsChange(productDetails)
+    message.success('Product details saved successfully!')
   }
 
-  const addAttributeValue = (attribute) => {
-    setAttributes((prev) => ({
-      ...prev,
-      [attribute]: [...prev[attribute], { value: '', quantity: '', price: '' }],
-    }))
-  }
-
-  const addCommonAttribute = () => {
-    setCommonAttributes((prev) => [...prev, { name: '', info: '' }])
-  }
-
-  const handleCommonAttributeChange = (index, field, value) => {
-    setCommonAttributes((prev) => prev.map((attr, i) => (i === index ? { ...attr, [field]: value } : attr)))
-  }
-
-  const removeCommonAttribute = (index) => {
-    setCommonAttributes((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  const toggleTheme = () => {
-    const newTheme = themeMode === 'light' ? 'dark' : 'light'
-    setThemeMode(newTheme)
-    localStorage.setItem('mui-mode', newTheme)
-  }
-
-  const showModal = () => {
-    setIsModalVisible(true)
-  }
-
+  const showModal = () => setIsModalVisible(true)
   const handleOk = () => {
     setIsModalVisible(false)
-    const newAttributes = {}
-    selectedAttributes.forEach((attr) => {
-      if (!attributes[attr]) {
-        newAttributes[attr] = []
-      }
-    })
-    setAttributes((prev) => ({ ...prev, ...newAttributes }))
-    if (Object.keys(newAttributes).length > 0) {
-      setPrice('')
-      setStock('')
-    }
-  }
-
-  const handleCancel = () => {
-    setIsModalVisible(false)
-  }
-
-  const onAttributeSelect = (attribute) => {
-    setSelectedAttributes((prev) =>
-      prev.includes(attribute) ? prev.filter((a) => a !== attribute) : [...prev, attribute],
+    form.setFieldsValue(
+      selectedAttributes.reduce((acc, attr) => {
+        acc[attr] = form.getFieldValue(attr) || []
+        return acc
+      }, {}),
     )
+  }
+  const handleCancel = () => setIsModalVisible(false)
+
+  const onAttributeSelect = (checkedValues) => {
+    setSelectedAttributes(checkedValues)
   }
 
   return (
@@ -152,179 +93,167 @@ const ProductDetails = ({ category, onDetailsChange }) => {
         algorithm: themeMode === 'dark' ? darkAlgorithm : defaultAlgorithm,
       }}
     >
-      <Box sx={{ width: '100%', padding: '8px', backgroundColor: '#1a1d1f' }}>
-        <Typography sx={{ fontSize: '18px' }}>Product Details - {category}</Typography>
-        <Divider />
-        <Box sx={{ width: '100%' }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <Typography sx={{ fontSize: '16px' }}>Product Name</Typography>
-              <Input value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%' }} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography sx={{ fontSize: '16px' }}>Country of Origin</Typography>
-              <Input
-                value={countryOfOrigin}
-                onChange={(e) => setCountryOfOrigin(e.target.value)}
-                style={{ width: '100%' }}
-              />
-            </Grid>
-          </Grid>
-          <Grid container spacing={2} sx={{ mt: 2 }}>
-            <Grid item xs={12} sm={3}>
-              <Typography sx={{ fontSize: '16px' }}>Brand</Typography>
-              <Input
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
-                disabled={isHandmade}
-                style={{ width: '100%' }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <Typography sx={{ fontSize: '16px' }}>Handmade</Typography>
-              <Box>
-                <Switch
-                  checked={isHandmade}
-                  onChange={setIsHandmade}
-                  checkedChildren="Handmade"
-                  unCheckedChildren="Not Handmade"
-                />
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <Typography sx={{ fontSize: '16px' }}>Price</Typography>
-              <Input
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                disabled={hasDiverseAttributes}
-                style={{ width: '100%' }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <Typography sx={{ fontSize: '16px' }}>Stock</Typography>
-              <Input
-                type="number"
-                value={stock}
-                onChange={(e) => setStock(e.target.value)}
-                disabled={hasDiverseAttributes}
-                style={{ width: '100%' }}
-              />
-            </Grid>
-          </Grid>
-          {/* Common Attributes */}
-          <Typography sx={{ mt: 2, fontSize: '16px' }}>Common Attributes</Typography>
-          <Box sx={{ marginBottom: '10px' }}>
-            {commonAttributes.map((attr, index) => (
-              <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
-                <Grid item xs={12} sm={5}>
-                  <Typography sx={{ fontSize: '14px' }}>Name</Typography>
-                  <Input
-                    value={attr.name}
-                    onChange={(e) => handleCommonAttributeChange(index, 'name', e.target.value)}
-                    style={{ width: '100%' }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={5}>
-                  <Typography sx={{ fontSize: '14px' }}>Detail</Typography>
-                  <Input
-                    value={attr.info}
-                    onChange={(e) => handleCommonAttributeChange(index, 'info', e.target.value)}
-                    style={{ width: '100%' }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={2}>
-                  <Button onClick={() => removeCommonAttribute(index)} danger style={{ marginTop: '24px' }}>
-                    Remove
+      <Card className="product-details-card" style={{ padding: '24px', borderRadius: '8px' }}>
+        <Form form={form} onFinish={onFinish} layout="vertical">
+          <Title level={3} style={{ marginBottom: '24px' }}>
+            Product Details - {category}
+          </Title>
+          <Divider style={{ margin: '24px 0' }} />
+
+          <Row gutter={24}>
+            <Col span={12}>
+              <Form.Item name="name" label="Product Name" rules={[{ required: true }]}>
+                <Input placeholder="Enter product name" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="countryOfOrigin" label="Country of Origin" rules={[{ required: true }]}>
+                <Input placeholder="Enter country of origin" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={24}>
+            <Col span={6}>
+              <Form.Item name="brand" label="Brand">
+                <Input placeholder="Enter brand name" />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="isHandmade" label="Handmade" valuePropName="checked">
+                <Switch checkedChildren="Handmade" unCheckedChildren="Not Handmade" />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="price" label="Price" rules={[{ required: true }]}>
+                <InputNumber style={{ width: '100%' }} placeholder="Enter price" min={0} />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="stock" label="Stock" rules={[{ required: true }]}>
+                <InputNumber style={{ width: '100%' }} placeholder="Enter stock" min={0} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider orientation="left" style={{ margin: '32px 0 16px' }}>
+            Common Attributes
+          </Divider>
+          <Form.List name="commonAttributes">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ key, name, ...restField }) => (
+                  <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'name']}
+                      rules={[{ required: true, message: 'Missing attribute name' }]}
+                    >
+                      <Input placeholder="Attribute Name" />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'info']}
+                      rules={[{ required: true, message: 'Missing attribute info' }]}
+                    >
+                      <Input placeholder="Attribute Info" />
+                    </Form.Item>
+                    <Button type="text" icon={<MinusCircleOutlined />} onClick={() => remove(name)} />
+                  </Space>
+                ))}
+                <Form.Item>
+                  <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                    Add Common Attribute
                   </Button>
-                </Grid>
-              </Grid>
-            ))}
-          </Box>
-          <Button variant="contained" onClick={addCommonAttribute}>
-            Add Common Attribute
-          </Button>
-          {/* Diverse Attributes */}
-          <Typography sx={{ mt: 2, fontSize: '16px' }}>Diverse Attributes</Typography>
-          <Button variant="contained" onClick={showModal} sx={{ mt: 1 }}>
+                </Form.Item>
+              </>
+            )}
+          </Form.List>
+
+          <Divider orientation="left" style={{ margin: '32px 0 16px' }}>
+            Diverse Attributes
+          </Divider>
+          <Button
+            onClick={showModal}
+            type="dashed"
+            icon={<PlusOutlined />}
+            style={{ marginBottom: '16px', width: '100%' }}
+          >
             Add Diverse Attributes
           </Button>
-          {Object.entries(attributes).map(([attribute, values]) => (
-            <Box key={attribute}>
-              <Typography variant="subtitle1">{attribute}</Typography>
-              {values.map((value, index) => (
-                <Grid container spacing={2} key={index} sx={{ mb: 1 }}>
-                  <Grid item xs={12} sm={4}>
-                    <Typography>Value</Typography>
-                    <Input
-                      value={value.value}
-                      onChange={(e) => handleAttributeChange(attribute, index, 'value', e.target.value)}
-                      style={{ width: '100%' }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <Typography>Quantity</Typography>
-                    <Input
-                      type="number"
-                      value={value.quantity}
-                      onChange={(e) => handleAttributeChange(attribute, index, 'quantity', e.target.value)}
-                      style={{ width: '100%' }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <Typography>Price</Typography>
-                    <Input
-                      type="number"
-                      value={value.price}
-                      onChange={(e) => handleAttributeChange(attribute, index, 'price', e.target.value)}
-                      style={{ width: '100%' }}
-                    />
-                  </Grid>
-                </Grid>
-              ))}
-              <Button variant="contained" onClick={() => addAttributeValue(attribute)} sx={{ mt: 1 }}>
-                Add {attribute}
-              </Button>
-            </Box>
-          ))}
-          {!isQuantityValid && (
-            <Typography color="error" sx={{ mt: 2 }}>
-              Total quantities of all attributes must be equal.
-            </Typography>
-          )}
-        </Box>
-      </Box>
 
-      <Modal title="Select Diverse Attributes" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
-        <Grid container spacing={2}>
-          {categoryAttributes[category]?.map((attribute, index) => (
-            <Grid item xs={12} sm={6} key={index}>
-              <Box
-                sx={{
-                  border: '1px solid',
-                  borderColor: selectedAttributes.includes(attribute) ? 'primary.main' : 'grey.300',
-                  borderRadius: 1,
-                  p: 1,
-                  cursor: 'pointer',
-                  '&:hover': {
-                    backgroundColor: 'action.hover',
-                  },
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-                onClick={() => onAttributeSelect(attribute)}
-              >
-                <span>{attribute}</span>
-                <InfoCircleOutlined style={{ color: 'rgba(0, 0, 0, 0.45)' }} />
-              </Box>
-              <Typography variant="caption" color="textSecondary">
-                {attributeDescriptions[attribute] || 'Description not available.'}
-              </Typography>
-            </Grid>
+          {selectedAttributes.map((attribute) => (
+            <Form.List key={attribute} name={attribute}>
+              {(fields, { add, remove }) => (
+                <Card
+                  title={attribute}
+                  style={{ marginBottom: '16px' }}
+                  extra={
+                    <Tooltip title={attributeDescriptions[attribute]}>
+                      <InfoCircleOutlined />
+                    </Tooltip>
+                  }
+                >
+                  {fields.map(({ key, name, ...restField }) => (
+                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'value']}
+                        rules={[{ required: true, message: 'Missing value' }]}
+                      >
+                        <Input placeholder="Value" />
+                      </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'quantity']}
+                        rules={[{ required: true, message: 'Missing quantity' }]}
+                      >
+                        <InputNumber placeholder="Quantity" min={0} />
+                      </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'price']}
+                        rules={[{ required: true, message: 'Missing price' }]}
+                      >
+                        <InputNumber placeholder="Price" min={0} />
+                      </Form.Item>
+                      <Button type="text" icon={<MinusCircleOutlined />} onClick={() => remove(name)} />
+                    </Space>
+                  ))}
+                  <Form.Item>
+                    <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                      Add {attribute}
+                    </Button>
+                  </Form.Item>
+                </Card>
+              )}
+            </Form.List>
           ))}
-        </Grid>
-      </Modal>
+
+          <Form.Item>
+            <Button type="primary" htmlType="submit" size="large" style={{ marginTop: '24px' }}>
+              Save Product Details
+            </Button>
+          </Form.Item>
+        </Form>
+
+        <Modal
+          title="Select Diverse Attributes"
+          visible={isModalVisible}
+          onOk={handleOk}
+          onCancel={handleCancel}
+          width={600}
+        >
+          <Checkbox.Group
+            options={categoryAttributes[category]?.map((attr) => ({
+              label: attr,
+              value: attr,
+            }))}
+            value={selectedAttributes}
+            onChange={onAttributeSelect}
+          />
+        </Modal>
+      </Card>
     </ConfigProvider>
   )
 }

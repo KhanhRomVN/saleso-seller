@@ -14,7 +14,7 @@ const useProductManagement = () => {
   const fetchProducts = async () => {
     try {
       const currentUser = getCurrentUser()
-      const response = await axios.get(`${BACKEND_URI}/product/seller/${currentUser.user_id}`)
+      const response = await axios.get(`${BACKEND_URI}/product/by-seller/${currentUser.user_id}`)
       const productsWithFirstImage = response.data.map((product) => ({
         ...product,
         image: product.images && product.images.length > 0 ? product.images[0] : '',

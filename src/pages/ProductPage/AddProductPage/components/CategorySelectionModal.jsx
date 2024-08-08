@@ -1,74 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Modal, Button, List, Typography, Space, ConfigProvider } from 'antd'
-import { LeftOutlined, RightOutlined } from '@ant-design/icons'
+import { Modal, Button, List, Typography, Space, ConfigProvider, theme } from 'antd'
+import { LeftOutlined, RightOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import axios from 'axios'
 import { BACKEND_URI } from '~/API'
 
-const themes = {
-  light: {
-    token: {
-      colorBgMask: 'rgba(0, 0, 0, 0.45)',
-      colorBgElevated: '#ffffff',
-      colorText: '#000000',
-      colorTextSecondary: '#666666',
-      colorBorder: '#d9d9d9',
-    },
-    components: {
-      Modal: {
-        contentBg: '#ffffff',
-        headerBg: '#ffffff',
-        titleColor: '#000000',
-      },
-      Button: {
-        colorPrimary: '#1890ff',
-        colorPrimaryHover: '#40a9ff',
-      },
-      List: {
-        colorSplit: '#f0f0f0',
-      },
-    },
-  },
-  dark: {
-    token: {
-      colorBgMask: 'rgba(0, 0, 0, 0.45)',
-      colorBgElevated: '#1f1f1f',
-      colorText: '#ffffff',
-      colorTextSecondary: '#aaaaaa',
-      colorBorder: '#333333',
-    },
-    components: {
-      Modal: {
-        contentBg: '#111315',
-        headerBg: '#111315',
-        titleColor: '#ffffff',
-      },
-      Button: {
-        colorPrimary: '#1890ff',
-        colorPrimaryHover: '#40a9ff',
-      },
-      List: {
-        colorSplit: '#333333',
-      },
-    },
-  },
-}
+const { Text } = Typography
 
 const CategorySelectionModal = ({ open, onClose, onSubmit, initialCategory }) => {
   const [categories, setCategories] = useState([])
   const [selectedCategories, setSelectedCategories] = useState([])
   const [currentLevel, setCurrentLevel] = useState(initialCategory)
-  const [currentTheme, setCurrentTheme] = useState(themes.light)
-
-  const updateTheme = useCallback(() => {
-    const mode = localStorage.getItem('mui-mode')
-    setCurrentTheme(mode === 'dark' ? themes.dark : themes.light)
-  }, [])
+  const [isDarkMode, setIsDarkMode] = useState(false)
 
   useEffect(() => {
-    updateTheme()
-    window.addEventListener('storage', updateTheme)
-    return () => window.removeEventListener('storage', updateTheme)
-  }, [updateTheme])
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    setIsDarkMode(darkModeMediaQuery.matches)
+    const handleChange = (e) => setIsDarkMode(e.matches)
+    darkModeMediaQuery.addListener(handleChange)
+    return () => darkModeMediaQuery.removeListener(handleChange)
+  }, [])
 
   useEffect(() => {
     if (open && initialCategory) {
@@ -110,7 +60,11 @@ const CategorySelectionModal = ({ open, onClose, onSubmit, initialCategory }) =>
   }
 
   return (
-    <ConfigProvider theme={currentTheme}>
+    <ConfigProvider
+      theme={{
+        algorithm: isDarkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,
+      }}
+    >
       <Modal
         open={open}
         onCancel={onClose}
@@ -139,7 +93,7 @@ const CategorySelectionModal = ({ open, onClose, onSubmit, initialCategory }) =>
           renderItem={(category) => (
             <List.Item onClick={() => handleCategoryClick(category)} style={{ cursor: 'pointer' }}>
               <Space>
-                <Typography.Text>{category.name}</Typography.Text>
+                <Text>{category.name}</Text>
                 {category.children?.length > 0 && <RightOutlined />}
               </Space>
             </List.Item>
