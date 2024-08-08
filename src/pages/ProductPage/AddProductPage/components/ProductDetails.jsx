@@ -93,12 +93,10 @@ const ProductDetails = ({ category, onDetailsChange }) => {
         algorithm: themeMode === 'dark' ? darkAlgorithm : defaultAlgorithm,
       }}
     >
-      <Card className="product-details-card" style={{ padding: '24px', borderRadius: '8px' }}>
+      <Card className="product-details-card" style={{ borderRadius: '8px', marginTop: '16px' }}>
         <Form form={form} onFinish={onFinish} layout="vertical">
-          <Title level={3} style={{ marginBottom: '24px' }}>
-            Product Details - {category}
-          </Title>
-          <Divider style={{ margin: '24px 0' }} />
+          <Title level={4}>Product Details - {category}</Title>
+          <Divider style={{ margin: '10px 0 16px 0' }} />
 
           <Row gutter={24}>
             <Col span={12}>
@@ -136,7 +134,7 @@ const ProductDetails = ({ category, onDetailsChange }) => {
             </Col>
           </Row>
 
-          <Divider orientation="left" style={{ margin: '32px 0 16px' }}>
+          <Divider orientation="left" style={{ margin: '0px 0 16px' }}>
             Common Attributes
           </Divider>
           <Form.List name="commonAttributes">
@@ -231,7 +229,7 @@ const ProductDetails = ({ category, onDetailsChange }) => {
           ))}
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" size="large" style={{ marginTop: '24px' }}>
+            <Button type="primary" htmlType="submit" size="medium" style={{ marginTop: '10px' }}>
               Save Product Details
             </Button>
           </Form.Item>

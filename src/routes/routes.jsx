@@ -1,12 +1,12 @@
-//* Public Page
+// Public Page
 import HomePage from '~/pages/HomePage'
 
-//* Auth Page
+// Auth Page
 import RegisterPage from '~/pages/RegisterPage'
 import UsernameGooglePage from '~/pages/UsernameGooglePage'
 import LoginPage from '~/pages/LoginPage'
 
-//* Product Page
+// Product Page
 import AddProductPage from '~/pages/ProductPage/AddProductPage/AddProductPage'
 import ManagementProductPage from '~/pages/ProductPage/ManagementProductPage/ManagementProductPage'
 import ProductEditPage from '~/pages/ProductPage/ProductEditPage/ProductEditPage'
@@ -49,7 +49,7 @@ const publicRoutes = [
     ),
   },
   {
-    path: '/add-product',
+    path: '/product/add',
     element: (
       <DefaultLayout>
         <AddProductPage />

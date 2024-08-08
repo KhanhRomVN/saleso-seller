@@ -101,7 +101,7 @@ const AddProductPage = () => {
               <Title level={3}>Create a New Product</Title>
               <Space>
                 <Button icon={<SaveOutlined />}>Save Draft</Button>
-                <Button icon={<CloseOutlined />} onClick={() => navigate('/products')}>
+                <Button icon={<CloseOutlined />} onClick={() => navigate('/product')}>
                   Cancel
                 </Button>
                 <Button type="primary" icon={<CheckOutlined />} onClick={handleSubmit}>

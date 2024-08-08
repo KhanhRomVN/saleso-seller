@@ -1,10 +1,12 @@
 import React from 'react'
-import { Table, Button, Space, Image } from 'antd'
+import { Table, Button, Space, Image, Menu, Dropdown } from 'antd'
 import { DeleteOutlined, MoreOutlined } from '@ant-design/icons'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
+import { useNavigate } from 'react-router-dom'
 
 const ProductList = ({ products, onDeleteClick, onMoreClick }) => {
+  const navigate = useNavigate()
   const mode = localStorage.getItem('mui-mode') || 'light'
 
   const theme = React.useMemo(
@@ -65,7 +67,18 @@ const ProductList = ({ products, onDeleteClick, onMoreClick }) => {
       render: (_, record) => (
         <Space size="middle">
           <Button icon={<DeleteOutlined />} onClick={() => onDeleteClick(record.id)} type="text" danger />
-          <Button icon={<MoreOutlined />} onClick={(e) => onMoreClick(e, record.id)} type="text" />
+          <Dropdown
+            overlay={
+              <Menu>
+                <Menu.Item key="edit" onClick={() => handleEdit(record.id)}>
+                  Edit Product
+                </Menu.Item>
+              </Menu>
+            }
+            trigger={['click']}
+          >
+            <Button icon={<MoreOutlined />} type="text" />
+          </Dropdown>
         </Space>
       ),
     },
@@ -81,6 +94,10 @@ const ProductList = ({ products, onDeleteClick, onMoreClick }) => {
     sold: product.units_sold,
     is_active: product.is_active,
   }))
+
+  const handleEdit = (productId) => {
+    navigate(`/product/edit/${productId}`)
+  }
 
   return (
     <ThemeProvider theme={theme}>

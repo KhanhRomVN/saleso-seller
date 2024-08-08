@@ -6,7 +6,7 @@ import ProductList from './components/ProductList'
 import DeleteConfirmationModal from './components/DeleteConfirmationModal'
 import ProductActionDropdown from './components/ProductActionDropdown'
 import useProductManagement from './hooks/useProductManagement'
-import CategorySelectionModal from './components/CategorySelectionModal'
+import CategorySelectionModal from '~/components/CategorySelectionModal/CategorySelectionModal'
 
 const { Content } = Layout
 const { Title } = Typography
@@ -37,7 +37,7 @@ const ManagementProductPage = () => {
 
   const handleCategorySubmit = (selectedCategories) => {
     const categoryNames = selectedCategories.map((category) => category.name)
-    navigate('/add-product', { state: { selectedCategories: categoryNames } })
+    navigate('/product/add', { state: { selectedCategories: categoryNames } })
   }
 
   return (
@@ -52,8 +52,8 @@ const ManagementProductPage = () => {
             </Col>
           ))}
         </Row>
-        <Card style={{ marginTop: '16px' }}>
-          <Row justify="space-between" align="middle" style={{ marginBottom: '16px' }}>
+        <Card style={{}}>
+          <Row justify="space-between" align="middle" style={{ marginBottom: '0px' }}>
             <Title level={4}>List Product</Title>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleAddNewProduct}>
               Add New Product
