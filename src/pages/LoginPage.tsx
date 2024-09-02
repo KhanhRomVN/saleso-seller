@@ -37,6 +37,7 @@ const LoginPage: React.FC = () => {
         ...credentials,
         role: "seller",
       });
+      console.log(data);
 
       Object.entries(data).forEach(([key, value]) => {
         localStorage.setItem(
