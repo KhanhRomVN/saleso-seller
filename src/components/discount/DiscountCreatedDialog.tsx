@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import {
@@ -23,61 +23,64 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Percent, DollarSign, Gift, Zap, Calendar } from "lucide-react";
+import { Percent, DollarSign, Gift, Zap, Calendar, Tag } from "lucide-react";
 import { post } from "@/utils/authUtils";
 
-interface DiscountData {
-  name: string;
+interface Discount {
+  _id?: string;
   code: string;
-  type: "percentage" | "fixed" | "buy_x_get_y" | "flash-sale";
-  value: number | { buyQuantity: number; getFreeQuantity: number };
-  startDate: Date;
-  endDate: Date;
-  minimumPurchase: number;
-  maxUses: number;
-  applicableProducts: string[];
-  customerUsageLimit: number;
+  type: "percentage" | "flash-sale" | "first-time" | "free-shipping";
+  value: number;
+  start_date: Date;
+  end_date: Date;
+  is_active?: boolean;
+  status?: "upcoming" | "ongoing" | "expired";
+  minimum_purchase: number;
+  max_uses: number;
+  current_uses?: number;
+  customer_usage_limit: number;
+  applicable_products?: string[];
 }
 
 interface DiscountCreatedDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: DiscountData) => void;
+  onSubmit: (data: Discount) => void;
 }
+
+const initialDiscountData: Discount = {
+  code: "",
+  type: "percentage",
+  value: 0,
+  start_date: new Date(),
+  end_date: new Date(),
+  minimum_purchase: 0,
+  max_uses: 0,
+  customer_usage_limit: 1,
+};
 
 const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
   isOpen,
   onClose,
   onSubmit,
 }) => {
-  const [discountData, setDiscountData] = useState<DiscountData>({
-    name: "",
-    code: "",
-    type: "percentage",
-    value: 0,
-    startDate: new Date(),
-    endDate: new Date(),
-    minimumPurchase: 0,
-    maxUses: 0,
-    applicableProducts: [],
-    customerUsageLimit: 1,
-  });
-
+  const [discountData, setDiscountData] =
+    useState<Discount>(initialDiscountData);
   const [errors, setErrors] = useState<string[]>([]);
 
   useEffect(() => {
     if (discountData.type === "flash-sale") {
-      const endDate = new Date(discountData.startDate);
+      const endDate = new Date(discountData.start_date);
       endDate.setHours(endDate.getHours() + 1);
-      setDiscountData((prev) => ({ ...prev, endDate }));
+      setDiscountData((prev) => ({ ...prev, end_date: endDate }));
     }
-  }, [discountData.type, discountData.startDate]);
+  }, [discountData.type, discountData.start_date]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setDiscountData((prev) => ({
       ...prev,
-      [name]: name === "name" || name === "code" ? value : Number(value),
+      [name]: name === "code" ? value : Number(value),
     }));
   };
 
@@ -96,19 +99,14 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
     }
   };
 
-  const validateForm = () => {
+  const validateForm = (): boolean => {
     const newErrors: string[] = [];
-    if (!discountData.name) newErrors.push("Discount name is required");
     if (!discountData.code) newErrors.push("Discount code is required");
     if (discountData.type === "flash-sale") {
-      if (
-        typeof discountData.value === "number" &&
-        (discountData.value <= 40 || discountData.value >= 100)
-      ) {
+      if (discountData.value <= 40 || discountData.value >= 100) {
         newErrors.push("Flash sale discount must be between 40 and 100");
       }
     }
-    // Add more validations as needed
     setErrors(newErrors);
     return newErrors.length === 0;
   };
@@ -118,12 +116,7 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
     if (!validateForm()) return;
 
     try {
-      const response = await post<DiscountData>(
-        "/discount/create",
-        discountData
-      );
-
-      console.log("Discount created successfully:", response);
+      const response = await post<Discount>("/discount", discountData);
       toast.success("Discount created successfully!");
       onSubmit(response);
       onClose();
@@ -133,19 +126,35 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
     }
   };
 
-  const getDiscountTypeIcon = (type: string) => {
-    switch (type) {
-      case "percentage":
-        return <Percent className="mr-2" />;
-      case "fixed":
-        return <DollarSign className="mr-2" />;
-      case "buy_x_get_y":
-        return <Gift className="mr-2" />;
-      case "flash-sale":
-        return <Zap className="mr-2" />;
-      default:
-        return null;
-    }
+  const getDiscountTypeIcon = useMemo(
+    () => (type: string) => {
+      switch (type) {
+        case "percentage":
+          return <Percent className="mr-2" />;
+        case "flash-sale":
+          return <Zap className="mr-2" />;
+        case "first-time":
+          return <Tag className="mr-2" />;
+        case "free-shipping":
+          return <Gift className="mr-2" />;
+        default:
+          return null;
+      }
+    },
+    []
+  );
+
+  const formAnimation = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.3 },
+  };
+
+  const errorAnimation = {
+    initial: { opacity: 0, y: -20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+    transition: { duration: 0.3 },
   };
 
   return (
@@ -154,24 +163,17 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
-              Create New Discount
+              New Discount
             </DialogTitle>
           </DialogHeader>
           <motion.form
             onSubmit={handleSubmit}
             className="space-y-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            {...formAnimation}
           >
             <AnimatePresence>
               {errors.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
+                <motion.div {...errorAnimation}>
                   <Alert variant="destructive">
                     <AlertDescription>
                       <ul>
@@ -198,16 +200,6 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
                   transition={{ delay: 0.2 }}
                 >
                   <div className="space-y-2">
-                    <Label htmlFor="name">Discount Name</Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      value={discountData.name}
-                      onChange={handleInputChange}
-                      placeholder="Enter discount name"
-                    />
-                  </div>
-                  <div className="space-y-2">
                     <Label htmlFor="code">Discount Code</Label>
                     <Input
                       id="code"
@@ -217,6 +209,33 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
                       placeholder="Enter discount code"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Discount Type</Label>
+                    <Select
+                      onValueChange={(value) =>
+                        handleSelectChange("type", value as Discount["type"])
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select discount type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(
+                          [
+                            "percentage",
+                            "flash-sale",
+                            "first-time",
+                            "free-shipping",
+                          ] as const
+                        ).map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {getDiscountTypeIcon(type)}{" "}
+                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </motion.div>
 
                 <motion.div
@@ -225,110 +244,16 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <Label htmlFor="type">Discount Type</Label>
-                  <Select
-                    onValueChange={(value) => handleSelectChange("type", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select discount type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="percentage">
-                        {getDiscountTypeIcon("percentage")} Percentage
-                      </SelectItem>
-                      <SelectItem value="fixed">
-                        {getDiscountTypeIcon("fixed")} Fixed Amount
-                      </SelectItem>
-                      <SelectItem value="buy_x_get_y">
-                        {getDiscountTypeIcon("buy_x_get_y")} Buy X Get Y Free
-                      </SelectItem>
-                      <SelectItem value="flash-sale">
-                        {getDiscountTypeIcon("flash-sale")} Flash Sale
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="value">Discount Value</Label>
+                  <Input
+                    id="value"
+                    name="value"
+                    type="number"
+                    value={discountData.value}
+                    onChange={handleInputChange}
+                    placeholder={`Enter discount value`}
+                  />
                 </motion.div>
-
-                {discountData.type === "buy_x_get_y" ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="buyQuantity">Buy Quantity</Label>
-                      <Input
-                        id="buyQuantity"
-                        name="buyQuantity"
-                        type="number"
-                        value={
-                          (
-                            discountData.value as {
-                              buyQuantity: number;
-                              getFreeQuantity: number;
-                            }
-                          ).buyQuantity
-                        }
-                        onChange={(e) =>
-                          setDiscountData((prev) => ({
-                            ...prev,
-                            value: {
-                              ...(prev.value as {
-                                buyQuantity: number;
-                                getFreeQuantity: number;
-                              }),
-                              buyQuantity: Number(e.target.value),
-                            },
-                          }))
-                        }
-                        placeholder="Enter buy quantity"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="getFreeQuantity">Get Free Quantity</Label>
-                      <Input
-                        id="getFreeQuantity"
-                        name="getFreeQuantity"
-                        type="number"
-                        value={
-                          (
-                            discountData.value as {
-                              buyQuantity: number;
-                              getFreeQuantity: number;
-                            }
-                          ).getFreeQuantity
-                        }
-                        onChange={(e) =>
-                          setDiscountData((prev) => ({
-                            ...prev,
-                            value: {
-                              ...(prev.value as {
-                                buyQuantity: number;
-                                getFreeQuantity: number;
-                              }),
-                              getFreeQuantity: Number(e.target.value),
-                            },
-                          }))
-                        }
-                        placeholder="Enter free quantity"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Label htmlFor="value">Discount Value</Label>
-                    <Input
-                      id="value"
-                      name="value"
-                      type="number"
-                      value={discountData.value as number}
-                      onChange={handleInputChange}
-                      placeholder={`Enter discount ${
-                        discountData.type === "percentage"
-                          ? "percentage"
-                          : "amount"
-                      }`}
-                      min={discountData.type === "flash-sale" ? 41 : 0}
-                      max={discountData.type === "flash-sale" ? 99 : undefined}
-                    />
-                  </div>
-                )}
               </TabsContent>
               <TabsContent value="conditions" className="space-y-4 mt-4">
                 <motion.div
@@ -338,13 +263,15 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
                   transition={{ delay: 0.2 }}
                 >
                   <div className="space-y-2">
-                    <Label htmlFor="startDate">Start Date</Label>
+                    <Label htmlFor="start_date">Start Date</Label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                       <DatePicker
-                        id="startDate"
-                        selected={discountData.startDate}
-                        onChange={(date) => handleDateChange("startDate", date)}
+                        id="start_date"
+                        selected={discountData.start_date}
+                        onChange={(date) =>
+                          handleDateChange("start_date", date)
+                        }
                         showTimeSelect
                         timeFormat="HH:00"
                         timeIntervals={60}
@@ -357,20 +284,22 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
                   </div>
                   {discountData.type !== "flash-sale" && (
                     <div className="space-y-2">
-                      <Label htmlFor="endDate">End Date</Label>
+                      <Label htmlFor="end_date">End Date</Label>
                       <div className="relative">
                         <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <DatePicker
-                          id="endDate"
-                          selected={discountData.endDate}
-                          onChange={(date) => handleDateChange("endDate", date)}
+                          id="end_date"
+                          selected={discountData.end_date}
+                          onChange={(date) =>
+                            handleDateChange("end_date", date)
+                          }
                           showTimeSelect
                           timeFormat="HH:00"
                           timeIntervals={60}
                           timeCaption="Time"
                           dateFormat="MMMM d, yyyy h:00 aa"
                           className="w-full bg-background_secondary p-2 pl-10 rounded-md"
-                          minDate={discountData.startDate}
+                          minDate={discountData.start_date}
                         />
                       </div>
                     </div>
@@ -382,14 +311,14 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <Label htmlFor="minimumPurchase">Minimum Purchase</Label>
+                  <Label htmlFor="minimum_purchase">Minimum Purchase</Label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <Input
-                      id="minimumPurchase"
-                      name="minimumPurchase"
+                      id="minimum_purchase"
+                      name="minimum_purchase"
                       type="number"
-                      value={discountData.minimumPurchase}
+                      value={discountData.minimum_purchase}
                       onChange={handleInputChange}
                       placeholder="Enter minimum purchase amount"
                       className="pl-10"
@@ -404,12 +333,12 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <Label htmlFor="maxUses">Maximum Uses</Label>
+                  <Label htmlFor="max_uses">Maximum Uses</Label>
                   <Input
-                    id="maxUses"
-                    name="maxUses"
+                    id="max_uses"
+                    name="max_uses"
                     type="number"
-                    value={discountData.maxUses}
+                    value={discountData.max_uses}
                     onChange={handleInputChange}
                     placeholder="Enter maximum uses"
                   />
@@ -420,14 +349,14 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <Label htmlFor="customerUsageLimit">
+                  <Label htmlFor="customer_usage_limit">
                     Customer Usage Limit
                   </Label>
                   <Input
-                    id="customerUsageLimit"
-                    name="customerUsageLimit"
+                    id="customer_usage_limit"
+                    name="customer_usage_limit"
                     type="number"
-                    value={discountData.customerUsageLimit}
+                    value={discountData.customer_usage_limit}
                     onChange={handleInputChange}
                     placeholder="Enter customer usage limit"
                   />

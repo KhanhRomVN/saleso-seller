@@ -88,8 +88,6 @@ const handlePublicRequest = async (
 ): Promise<AxiosResponse> => {
   // eslint-disable-next-line no-useless-catch
   try {
-    console.log(BACKEND_URI);
-
     return await axios({
       method,
       url: `${BACKEND_URI}${url}`,

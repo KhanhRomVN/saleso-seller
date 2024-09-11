@@ -6,27 +6,22 @@ import ProductTable from "../product/ProductTable";
 import DiscountDetail from "./DiscountDetail";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { post, getPublic, putPublic } from "@/utils/authUtils";
-
-interface DiscountValue {
-  buyQuantity: number;
-  getFreeQuantity: number;
-}
+import { getPublic, put, del } from "@/utils/authUtils";
 
 interface Discount {
   _id: string;
-  name: string;
   code: string;
-  type: "percentage" | "fixed" | "flash-sale" | "buy_x_get_y";
-  value: number | DiscountValue;
-  startDate: string;
-  endDate: string;
-  isActive: boolean;
-  currentUses?: number;
-  maxUses?: number;
-  applicableProducts?: string[];
-  minimumPurchase?: number;
-  customerUsageLimit?: number;
+  type: "percentage" | "flash-sale" | "first-time" | "free-shipping";
+  value: number;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+  status: "upcoming" | "ongoing" | "expired";
+  minimum_purchase: number;
+  max_uses: number;
+  current_uses: number;
+  customer_usage_limit: number;
+  applicable_products: string[];
 }
 
 interface DiscountTicketDialogProps {
@@ -45,12 +40,13 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
     if (isOpen) {
       fetchDiscountData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const fetchDiscountData = async () => {
     try {
-      const response = await getPublic<Discount>(`/discount/${discount_id}`);
+      const response = await getPublic<Discount>(
+        `/discount/get/${discount_id}`
+      );
       setDiscountData(response);
     } catch (error) {
       console.error("Error fetching discount data:", error);
@@ -58,41 +54,9 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    if (!discountData) return;
-
-    if (name === "value" && discountData.type === "buy_x_get_y") {
-      try {
-        const parsedValue = JSON.parse(value);
-        setDiscountData({ ...discountData, [name]: parsedValue });
-      } catch (error) {
-        console.error("Invalid JSON for buy_x_get_y value", error);
-      }
-    } else if (type === "checkbox") {
-      setDiscountData({ ...discountData, [name]: checked });
-    } else {
-      setDiscountData({ ...discountData, [name]: value });
-    }
-  };
-
-  const handleSaveChanges = async () => {
-    if (!discountData) return;
-    try {
-      await putPublic(`/discount/${discount_id}`, discountData);
-      toast.success("Discount updated successfully");
-    } catch (error) {
-      console.error("Error updating discount:", error);
-      toast.error("Failed to update discount");
-    }
-  };
-
   const handleApplyProduct = async (productId: string) => {
     try {
-      await post("/discount/apply", {
-        discountId: discount_id,
-        productId,
-      });
+      await put(`/discount/products/${productId}/discounts/${discount_id}`);
       toast.success("Product applied to discount successfully");
     } catch (error) {
       console.error("Error applying product to discount:", error);
@@ -102,9 +66,7 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
 
   const handleCancelProduct = async (productId: string) => {
     try {
-      await post(`/discount/${discount_id}/cancel`, {
-        productId,
-      });
+      await del(`/discount/products/${productId}/discounts/${discount_id}`);
       toast.success("Product removed from discount successfully");
     } catch (error) {
       console.error("Error removing product from discount:", error);
@@ -154,11 +116,7 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
             </TabsList>
 
             <TabsContent value="discountData">
-              <DiscountDetail
-                discountData={discountData}
-                handleInputChange={handleInputChange}
-                handleSaveChanges={handleSaveChanges}
-              />
+              <DiscountDetail discountData={discountData} />
             </TabsContent>
 
             <TabsContent value="applyProduct">

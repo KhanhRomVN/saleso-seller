@@ -19,33 +19,18 @@ import { get } from "@/utils/authUtils";
 
 interface Discount {
   _id: string;
-  name: string;
   code: string;
-  type: "percentage" | "fixed" | "flash-sale" | "buy_x_get_y";
-  value: number | { buyQuantity: number; getFreeQuantity: number };
-  startDate: string;
-  endDate: string;
-  minimumPurchase: number;
-  maxUses: number;
-  applicableProducts?: string[];
-  customerUsageLimit: number;
-  seller_id: string;
+  type: "percentage" | "flash-sale" | "first-time" | "free-shipping";
+  value: number;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
   status: "upcoming" | "ongoing" | "expired";
-  isActive: boolean;
-  currentUses?: number;
-}
-
-interface DiscountData {
-  name: string;
-  code: string;
-  type: "percentage" | "fixed" | "buy_x_get_y" | "flash-sale";
-  value: number | { buyQuantity: number; getFreeQuantity: number };
-  startDate: Date;
-  endDate: Date;
-  minimumPurchase: number;
-  maxUses: number;
-  applicableProducts: string[];
-  customerUsageLimit: number;
+  minimum_purchase: number;
+  max_uses: number;
+  current_uses: number;
+  customer_usage_limit: number;
+  applicable_products: string[];
 }
 
 const DiscountPage: React.FC = () => {
@@ -58,7 +43,9 @@ const DiscountPage: React.FC = () => {
     const fetchDiscounts = async () => {
       try {
         setLoading(true);
-        const response = await get<Discount[]>("/discount/all");
+        // Get all seller discounts
+        const response = await get<Discount[]>("/discount");
+        console.log(response);
         setDiscounts(response);
         setError(null);
       } catch (error) {
@@ -80,24 +67,23 @@ const DiscountPage: React.FC = () => {
         case "Expired":
           return discount.status.toLowerCase() === filter.toLowerCase();
         case "Active":
-          return discount.isActive;
+          return discount.is_active;
         case "Non-active":
-          return !discount.isActive;
+          return !discount.is_active;
         case "Percentage":
-        case "Fixed":
-          return discount.type.toLowerCase() === filter.toLowerCase();
-        case "Buy X Get Y":
-          return discount.type === "buy_x_get_y";
-        case "Flash Sale":
+        case "Flashsale":
           return discount.type === "flash-sale";
+        case "First-time":
+          return discount.type === "first-time";
+        case "Free-shipping":
+          return discount.type === "free-shipping";
         default:
           return true;
       }
     });
   };
 
-  const handleCreateDiscount = (discountData: DiscountData) => {
-    console.log("Creating discount:", discountData);
+  const handleCreateDiscount = () => {
     setIsDialogOpen(false);
     toast.success("Discount created successfully!");
   };
@@ -134,9 +120,9 @@ const DiscountPage: React.FC = () => {
     "Active",
     "Non-active",
     "Percentage",
-    "Fixed",
-    "Buy X Get Y",
-    "Flash Sale",
+    "Flashsale",
+    "First-time",
+    "Free-shipping",
   ];
 
   return (
@@ -153,7 +139,7 @@ const DiscountPage: React.FC = () => {
           onClick={() => setIsDialogOpen(true)}
         >
           <PlusCircle size={20} />
-          Create New Discount
+          New Discount
         </Button>
       </motion.div>
       {loading && <p className="text-center">Loading discounts...</p>}
