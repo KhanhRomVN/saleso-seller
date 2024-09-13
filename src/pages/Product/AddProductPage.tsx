@@ -19,12 +19,6 @@ import ImageUpload from "@/components/ImageUpload";
 import { Button } from "@/components/ui/button";
 import { post } from "@/utils/authUtils";
 
-interface Attribute {
-  attributes_value: string;
-  attributes_quantity: number;
-  attributes_price: number;
-}
-
 interface Detail {
   details_name: string;
   details_info: string;
@@ -35,19 +29,23 @@ interface Category {
   category_name: string;
 }
 
+interface Variant {
+  sku: string;
+  stock: number;
+  price: number;
+}
+
 interface ProductData {
   name: string;
-  description: string;
-  countryOfOrigin: string;
-  brand: string;
-  attributes_name?: string;
-  attributes?: Attribute[];
-  price?: number;
-  stock?: number;
-  details: Detail[];
-  categories: Category[];
-  tags: string[];
+  slug: string;
   images: string[];
+  description: string | null;
+  address: string;
+  origin: string;
+  categories: Category[];
+  details: Detail[] | [];
+  tags: string[];
+  variants: Variant[];
 }
 
 const AddProductPage: React.FC = () => {
@@ -55,17 +53,22 @@ const AddProductPage: React.FC = () => {
   const { toast } = useToast();
   const [productData, setProductData] = useState<ProductData>({
     name: "",
-    description: "",
-    countryOfOrigin: "",
-    brand: "",
-    details: [],
-    categories: [],
-    tags: [],
+    slug: "",
     images: [],
+    description: "",
+    address: "",
+    origin: "",
+    categories: [],
+    details: [],
+    tags: [],
+    variants: [],
   });
+  // images
   const [images, setImages] = useState<string[]>([]);
+  // categories
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  // tags
   const [tags, setTags] = useState<string[]>([]);
 
   const fadeInUp = useMemo(
@@ -101,6 +104,7 @@ const AddProductPage: React.FC = () => {
     });
   };
 
+  // submit to create new product
   const handleSubmit = async () => {
     toast({
       description: "Creating product...",
@@ -109,20 +113,21 @@ const AddProductPage: React.FC = () => {
     try {
       const product = {
         ...productData,
-        categories,
         images,
+        categories,
         tags,
         upcoming_discounts: [],
         ongoing_discounts: [],
         expired_discounts: [],
       };
 
-      const response = await post("/product/create", product);
+      console.log(product);
+
+      await post("/product/create", product);
 
       toast({
         description: "Product created successfully",
       });
-      console.log("Product created:", response);
 
       setTimeout(() => {
         navigate("/product/management");
@@ -136,6 +141,7 @@ const AddProductPage: React.FC = () => {
     }
   };
 
+  // other function
   const handleBackToProductManagement = () => {
     navigate("/product/management");
   };

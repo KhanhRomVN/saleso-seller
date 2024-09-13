@@ -8,12 +8,16 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronRight, Loader2 } from "lucide-react";
+import { ChevronRight, Loader2, ChevronLeft } from "lucide-react";
 import { getPublic } from "@/utils/authUtils";
 
 interface Category {
   category_id: string;
   category_name: string;
+}
+
+interface CategoryWithChildren extends Category {
+  children?: CategoryWithChildren[];
 }
 
 interface Props {
@@ -27,12 +31,11 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
   onClose,
   setCategories,
 }) => {
-  const [availableCategories, setAvailableCategories] = useState<Category[]>(
-    []
-  );
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    null
-  );
+  const [categoryHierarchy, setCategoryHierarchy] = useState<
+    CategoryWithChildren[]
+  >([]);
+  const [currentLevel, setCurrentLevel] = useState<CategoryWithChildren[]>([]);
+  const [breadcrumbs, setBreadcrumbs] = useState<CategoryWithChildren[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,11 +46,19 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
       const url = parentId
         ? `/category/children-of-parent/${parentId}`
         : "/category/level/1";
-      const response = await getPublic<Category[]>(url);
-      setAvailableCategories(response);
+      const response = await getPublic(url);
+      const transformedCategories: CategoryWithChildren[] = response.map(
+        (item: any) => ({
+          category_id: item._id,
+          category_name: item.name,
+          children: [],
+        })
+      );
+      return transformedCategories;
     } catch (err) {
       setError("Failed to fetch categories");
       console.error(err);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -55,24 +66,44 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
 
   useEffect(() => {
     if (isOpen) {
-      fetchCategories();
+      fetchCategories().then(setCurrentLevel);
     }
   }, [isOpen, fetchCategories]);
 
   const handleCategoryClick = useCallback(
-    (category: Category) => {
-      setSelectedCategory(category);
-      fetchCategories(category.category_id);
+    async (category: CategoryWithChildren) => {
+      const children = await fetchCategories(category.category_id);
+      if (children.length > 0) {
+        category.children = children;
+        setCategoryHierarchy((prev) => [...prev, category]);
+        setCurrentLevel(children);
+        setBreadcrumbs((prev) => [...prev, category]);
+      }
     },
     [fetchCategories]
   );
 
+  const handleBreadcrumbClick = useCallback(
+    (index: number) => {
+      const newBreadcrumbs = breadcrumbs.slice(0, index + 1);
+      setBreadcrumbs(newBreadcrumbs);
+      setCurrentLevel(
+        index === 0
+          ? categoryHierarchy[0].children || []
+          : newBreadcrumbs[index].children || []
+      );
+    },
+    [breadcrumbs, categoryHierarchy]
+  );
+
   const handleAddCategory = useCallback(() => {
-    if (selectedCategory) {
-      setCategories((prev) => [...prev, selectedCategory]);
-      onClose();
-    }
-  }, [selectedCategory, setCategories, onClose]);
+    const selectedCategories = breadcrumbs.map((cat) => ({
+      category_id: cat.category_id,
+      category_name: cat.category_name,
+    }));
+    setCategories(selectedCategories);
+    onClose();
+  }, [breadcrumbs, setCategories, onClose]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -80,6 +111,20 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
         <DialogHeader>
           <DialogTitle>Select Category</DialogTitle>
         </DialogHeader>
+        <div className="flex items-center space-x-2 mb-2">
+          {breadcrumbs.map((crumb, index) => (
+            <React.Fragment key={crumb.category_id}>
+              {index > 0 && <ChevronRight className="h-4 w-4" />}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleBreadcrumbClick(index)}
+              >
+                {crumb.category_name}
+              </Button>
+            </React.Fragment>
+          ))}
+        </div>
         <ScrollArea className="mt-2 max-h-[300px] pr-4">
           {loading ? (
             <div className="flex justify-center items-center h-[200px]">
@@ -89,7 +134,7 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
             <p className="text-red-500">{error}</p>
           ) : (
             <ul>
-              {availableCategories.map((category) => (
+              {currentLevel.map((category) => (
                 <li
                   key={category.category_id}
                   className="py-2 px-2 hover:bg-gray-100 cursor-pointer rounded"
@@ -105,9 +150,7 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
           )}
         </ScrollArea>
         <DialogFooter>
-          {selectedCategory && (
-            <Button onClick={handleAddCategory}>Add Category</Button>
-          )}
+          <Button onClick={handleAddCategory}>Add Selected Categories</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

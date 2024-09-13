@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,12 +15,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Plus, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-
-interface Attribute {
-  attributes_value: string;
-  attributes_quantity: number;
-  attributes_price: number;
-}
+import VariantDialog from "@/components/VariantDialog";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Detail {
   details_name: string;
@@ -33,19 +28,23 @@ interface Category {
   category_name: string;
 }
 
+interface Variant {
+  sku: string;
+  stock: number;
+  price: number;
+}
+
 interface ProductData {
   name: string;
-  description: string;
-  countryOfOrigin: string;
-  brand: string;
-  attributes_name?: string;
-  attributes?: Attribute[];
-  price?: number;
-  stock?: number;
-  details: Detail[];
-  categories: Category[];
-  tags: string[];
+  slug: string;
   images: string[];
+  description: string | null;
+  address: string;
+  origin: string;
+  categories: Category[];
+  details: Detail[];
+  tags: string[];
+  variants: Variant[];
 }
 
 interface ProductDetailProps {
@@ -57,86 +56,102 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
   productData,
   setProductData,
 }) => {
-  const [newAttribute, setNewAttribute] = useState<Attribute>({
-    attributes_value: "",
-    attributes_quantity: 0,
-    attributes_price: 0,
-  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [newDetail, setNewDetail] = useState<Detail>({
     details_name: "",
     details_info: "",
   });
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAttributeMode, setIsAttributeMode] = useState(false);
-
-  useEffect(() => {
-    if (productData.attributes && productData.attributes.length > 0) {
-      setIsAttributeMode(true);
-    } else if (productData.price || productData.stock) {
-      setIsAttributeMode(false);
-    }
-  }, [productData]);
+  const [isVariantDialogOpen, setIsVariantDialogOpen] = useState(false);
+  const [currentVariantIndex, setCurrentVariantIndex] = useState<number | null>(
+    null
+  );
+  const { toast } = useToast();
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    if (
-      (name === "price" || name === "stock") &&
-      isAttributeMode &&
-      productData.attributes &&
-      productData.attributes.length > 0
-    ) {
-      setIsModalOpen(true);
-    } else {
-      setProductData((prev) => ({
-        ...prev,
-        [name]: name === "price" || name === "stock" ? Number(value) : value,
-      }));
-    }
+    setProductData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAttributeChange = (
+  const handleConfirmModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleCancelModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const deleteVariant = (index: number) => {
+    setProductData((prev) => ({
+      ...prev,
+      variants: prev.variants.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleVariantChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     index: number
   ) => {
     const { name, value } = e.target;
     setProductData((prev) => ({
       ...prev,
-      attributes: prev.attributes?.map((attr, i) =>
+      variants: prev.variants.map((variant, i) =>
         i === index
-          ? {
-              ...attr,
-              [name]: name === "attributes_value" ? value : Number(value),
-            }
-          : attr
+          ? { ...variant, [name]: name === "sku" ? value : Number(value) }
+          : variant
       ),
     }));
   };
 
-  const addAttribute = () => {
+  const handleNewVariant = () => {
+    if (productData.categories.length === 0) {
+      toast({
+        title: "Warning",
+        description: "Please add at least one category before adding variants.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const newVariant = { sku: "", stock: 0, price: 0 };
     setProductData((prev) => ({
       ...prev,
-      attributes: [...(prev.attributes || []), newAttribute],
+      variants: [...prev.variants, newVariant],
     }));
-    setNewAttribute({
-      attributes_value: "",
-      attributes_quantity: 0,
-      attributes_price: 0,
-    });
+    setCurrentVariantIndex(productData.variants.length);
+    setIsVariantDialogOpen(true);
   };
 
-  const deleteAttribute = (index: number) => {
+  const handleVariantSelected = (sku: string) => {
+    if (currentVariantIndex !== null) {
+      setProductData((prev) => ({
+        ...prev,
+        variants: prev.variants.map((variant, index) =>
+          index === currentVariantIndex ? { ...variant, sku } : variant
+        ),
+      }));
+    }
+    setIsVariantDialogOpen(false);
+    setCurrentVariantIndex(null);
+  };
+
+  const openVariantDialog = (index: number) => {
+    setCurrentVariantIndex(index);
+    setIsVariantDialogOpen(true);
+  };
+
+  const addDetail = () => {
     setProductData((prev) => ({
       ...prev,
-      attributes: prev.attributes?.filter((_, i) => i !== index),
+      details: [...prev.details, newDetail],
     }));
+    setNewDetail({ details_name: "", details_info: "" });
   };
 
   const deleteDetail = (index: number) => {
     setProductData((prev) => ({
       ...prev,
-      details: prev.details?.filter((_, i) => i !== index),
+      details: prev.details.filter((_, i) => i !== index),
     }));
   };
 
@@ -151,46 +166,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
         i === index ? { ...detail, [name]: value } : detail
       ),
     }));
-  };
-
-  const addDetail = () => {
-    setProductData((prev) => ({
-      ...prev,
-      details: [...prev.details, newDetail],
-    }));
-    setNewDetail({ details_name: "", details_info: "" });
-  };
-
-  const handleConfirmModal = () => {
-    setProductData((prev) => ({
-      ...prev,
-      price: undefined,
-      stock: undefined,
-      attributes: [],
-    }));
-    setIsAttributeMode(true);
-    setIsModalOpen(false);
-  };
-
-  const handleCancelModal = () => {
-    setIsModalOpen(false);
-  };
-
-  const handleAttributeModeToggle = () => {
-    if (isAttributeMode) {
-      setProductData((prev) => ({
-        ...prev,
-        attributes: [],
-        attributes_name: undefined,
-      }));
-    } else {
-      setProductData((prev) => ({
-        ...prev,
-        price: undefined,
-        stock: undefined,
-      }));
-    }
-    setIsAttributeMode(!isAttributeMode);
   };
 
   return (
@@ -214,7 +189,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
           <Textarea
             id="description"
             name="description"
-            value={productData.description}
+            value={productData.description || ""}
             onChange={handleInputChange}
             className="mt-1"
           />
@@ -222,164 +197,75 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
 
         <div className="flex gap-4">
           <div className="flex-1">
-            <Label htmlFor="countryOfOrigin">Country of Origin</Label>
+            <Label htmlFor="origin">Origin</Label>
             <Input
-              id="countryOfOrigin"
-              name="countryOfOrigin"
-              value={productData.countryOfOrigin}
+              id="origin"
+              name="origin"
+              value={productData.origin}
               onChange={handleInputChange}
               className="mt-1"
             />
           </div>
 
           <div className="flex-1">
-            <Label htmlFor="brand">Brand</Label>
+            <Label htmlFor="address">Address</Label>
             <Input
-              id="brand"
-              name="brand"
-              value={productData.brand}
+              id="address"
+              name="address"
+              value={productData.address}
               onChange={handleInputChange}
               className="mt-1"
             />
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="attribute-mode"
-            checked={isAttributeMode}
-            onCheckedChange={handleAttributeModeToggle}
-          />
-          <Label htmlFor="attribute-mode">Product Attributes</Label>
-        </div>
-
         <AnimatePresence>
-          {!isAttributeMode && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="flex gap-4"
-            >
-              <div className="flex-1">
-                <Label htmlFor="price">Price</Label>
-                <Input
-                  id="price"
-                  name="price"
-                  type="number"
-                  value={productData.price}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                />
-              </div>
-
-              <div className="flex-1">
-                <Label htmlFor="stock">Stock</Label>
-                <Input
-                  id="stock"
-                  name="stock"
-                  type="number"
-                  value={productData.stock}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {isAttributeMode && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-            >
-              <div>
-                <Label htmlFor="attributes_name">Attributes Name</Label>
-                <Input
-                  id="attributes_name"
-                  name="attributes_name"
-                  value={productData.attributes_name}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                />
-              </div>
-
-              <div className="mt-4">
-                <p className="text-lg font-semibold mb-2">Attributes</p>
-                {productData.attributes?.map((attr, index) => (
-                  <div key={index} className="flex space-x-2 mb-2">
-                    <Input
-                      placeholder="Value"
-                      name="attributes_value"
-                      value={attr.attributes_value}
-                      onChange={(e) => handleAttributeChange(e, index)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Quantity"
-                      name="attributes_quantity"
-                      value={attr.attributes_quantity}
-                      onChange={(e) => handleAttributeChange(e, index)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Price"
-                      name="attributes_price"
-                      value={attr.attributes_price}
-                      onChange={(e) => handleAttributeChange(e, index)}
-                    />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => deleteAttribute(index)}
-                      className="p-2"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </Button>
-                  </div>
-                ))}
-                <div className="flex space-x-2 mb-2">
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            <div>
+              <p className="text-lg font-semibold mb-2">Variants</p>
+              {productData.variants.map((variant, index) => (
+                <div key={index} className="flex space-x-2 mb-2">
                   <Input
-                    placeholder="Value"
-                    value={newAttribute.attributes_value}
-                    onChange={(e) =>
-                      setNewAttribute({
-                        ...newAttribute,
-                        attributes_value: e.target.value,
-                      })
-                    }
+                    placeholder="SKU"
+                    name="sku"
+                    value={variant.sku}
+                    onChange={(e) => handleVariantChange(e, index)}
+                    onClick={() => openVariantDialog(index)}
+                    readOnly
                   />
                   <Input
                     type="number"
-                    placeholder="Quantity"
-                    value={newAttribute.attributes_quantity}
-                    onChange={(e) =>
-                      setNewAttribute({
-                        ...newAttribute,
-                        attributes_quantity: Number(e.target.value),
-                      })
-                    }
+                    placeholder="Stock"
+                    name="stock"
+                    value={variant.stock}
+                    onChange={(e) => handleVariantChange(e, index)}
                   />
                   <Input
                     type="number"
                     placeholder="Price"
-                    value={newAttribute.attributes_price}
-                    onChange={(e) =>
-                      setNewAttribute({
-                        ...newAttribute,
-                        attributes_price: Number(e.target.value),
-                      })
-                    }
+                    name="price"
+                    value={variant.price}
+                    onChange={(e) => handleVariantChange(e, index)}
                   />
-                  <Button onClick={addAttribute} className="p-2">
-                    <Plus className="h-5 w-5" />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => deleteVariant(index)}
+                    className="p-2"
+                  >
+                    <Trash2 className="h-5 w-5" />
                   </Button>
                 </div>
-              </div>
-            </motion.div>
-          )}
+              ))}
+              <Button onClick={handleNewVariant} className="mt-2">
+                <Plus className="h-5 w-5 mr-2" /> New Variant
+              </Button>
+            </div>
+          </motion.div>
         </AnimatePresence>
 
         <div>
@@ -423,7 +309,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
                 setNewDetail({ ...newDetail, details_info: e.target.value })
               }
             />
-
             <Button onClick={addDetail} className="p-2">
               <Plus className="h-5 w-5" />
             </Button>
@@ -435,9 +320,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Action</AlertDialogTitle>
             <AlertDialogDescription>
-              {isAttributeMode
-                ? "Adding price or stock will remove all attributes. Do you want to proceed?"
-                : "Adding attributes will remove the price and stock values. Do you want to proceed?"}
+              Adding variants will allow you to specify different SKUs, stocks,
+              and prices for the product. Do you want to proceed?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -450,6 +334,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <VariantDialog
+        isOpen={isVariantDialogOpen}
+        onClose={() => setIsVariantDialogOpen(false)}
+        onVariantSelected={handleVariantSelected}
+        categoryId={productData.categories[0]?.category_id}
+        selectedVariants={productData.variants.map((v) => v.sku)}
+      />
     </div>
   );
 };
