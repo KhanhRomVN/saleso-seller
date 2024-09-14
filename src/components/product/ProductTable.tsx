@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Ellipsis, ChevronDown, ChevronUp } from "lucide-react";
+import { MoreHorizontal, ChevronDown, ChevronUp } from "lucide-react";
 import {
   TooltipProvider,
   Tooltip,
@@ -23,29 +23,20 @@ import {
 } from "@/components/ui/tooltip";
 import { post } from "@/utils/authUtils";
 
-interface Attribute {
-  attributes_value: string;
-  attributes_quantity: number;
-  attributes_price: number;
-}
-
 interface Product {
   _id: string;
   name: string;
-  images: string[];
-  price?: number;
-  attributes?: Attribute[];
-  countryOfOrigin: string;
-  stock?: number;
-  units_sold: number;
+  image: string;
   is_active: string;
-  upcoming_discounts: string[];
-  ongoing_discounts: string[];
-  expired_discounts: string[];
+  seller_id: string;
+  price: string | number;
+  stock: number;
+  origin: string;
+  applied_discounts?: string[];
 }
 
 interface Column {
-  key: keyof Product | "actions" | "apply" | string;
+  key: keyof Product | "actions" | "applied_discount";
   header: string;
   sortable?: boolean;
   render?: (product: Product) => React.ReactNode;
@@ -59,7 +50,7 @@ interface Action {
 interface ProductTableProps {
   columns: Column[];
   actions: Action[];
-  discount_id?: string; // Make discount_id optional
+  discount_id?: string | null;
 }
 
 const ProductTable: React.FC<ProductTableProps> = ({
@@ -69,57 +60,27 @@ const ProductTable: React.FC<ProductTableProps> = ({
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [sortConfig, setSortConfig] = useState<{
-    key: keyof Product;
+    key: keyof Product | "applied_discount";
     direction: "asc" | "desc";
   } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        setIsLoading(true);
         const response = await post<Product[]>("/product/by-seller", {});
+        console.log(response);
+
         setProducts(response);
       } catch (error) {
         console.error("Error fetching products:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchProducts();
-  }, []);
-
-  const isProductAppliedToDiscount = useCallback(
-    (product: Product): boolean => {
-      if (!discount_id) return false;
-      return [
-        ...product.upcoming_discounts,
-        ...product.ongoing_discounts,
-        ...product.expired_discounts,
-      ].includes(discount_id);
-    },
-    [discount_id]
-  );
-
-  const getPrice = useCallback((product: Product): string => {
-    if (product.price !== undefined) {
-      return `$${product.price.toFixed(2)}`;
-    } else if (product.attributes) {
-      const prices = product.attributes.map((attr) => attr.attributes_price);
-      const minPrice = Math.min(...prices);
-      const maxPrice = Math.max(...prices);
-      return `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`;
-    }
-    return "N/A";
-  }, []);
-
-  const getStock = useCallback((product: Product): number | string => {
-    if (product.stock !== undefined) {
-      return product.stock;
-    } else if (product.attributes) {
-      return product.attributes.reduce(
-        (total, attr) => total + attr.attributes_quantity,
-        0
-      );
-    }
-    return "N/A";
   }, []);
 
   const renderCell = useCallback(
@@ -131,21 +92,21 @@ const ProductTable: React.FC<ProductTableProps> = ({
       switch (column.key) {
         case "name":
           return (
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger className="">
+                  <TooltipTrigger>
                     <img
-                      src={product.images[0]}
+                      src={product.image}
                       alt={product.name}
                       className="w-10 h-10 object-cover rounded-full shadow-md transition-transform duration-300 hover:scale-110"
                     />
                   </TooltipTrigger>
-                  <TooltipContent className="bg-background">
+                  <TooltipContent side="right">
                     <img
-                      src={product.images[0]}
+                      src={product.image}
                       alt={product.name}
-                      className="w-32 h-32 object-cover"
+                      className="w-40 h-40 object-cover rounded-md"
                     />
                   </TooltipContent>
                 </Tooltip>
@@ -154,49 +115,58 @@ const ProductTable: React.FC<ProductTableProps> = ({
             </div>
           );
         case "price":
+          return typeof product.price === "string"
+            ? product.price
+            : `$${product.price.toFixed(2)}`;
+        case "stock":
           return (
-            <span className="font-semibold text-green-600">
-              {getPrice(product)}
+            <span
+              className={`font-semibold ${
+                product.stock > 100 ? "text-green-600" : "text-orange-500"
+              }`}
+            >
+              {product.stock}
             </span>
           );
-        case "stock":
-          return <span className="font-semibold">{getStock(product)}</span>;
         case "is_active":
           return (
             <span
               className={`px-2 py-1 rounded-full text-xs font-semibold ${
                 product.is_active === "Y"
-                  ? "bg-green-200 text-green-800"
-                  : "bg-red-200 text-red-800"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
               }`}
             >
               {product.is_active === "Y" ? "Active" : "Inactive"}
             </span>
           );
-        case "apply":
-          return (
-            <span
-              className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                isProductAppliedToDiscount(product)
-                  ? "bg-green-200 text-green-800"
-                  : "bg-red-200 text-red-800"
-              }`}
-            >
-              {isProductAppliedToDiscount(product) ? "Yes" : "No"}
-            </span>
-          );
+        case "applied_discount":
+          if (discount_id && product.applied_discounts) {
+            return (
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  product.applied_discounts.includes(discount_id)
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
+              >
+                {product.applied_discounts.includes(discount_id) ? "Yes" : "No"}
+              </span>
+            );
+          }
+          return null;
         case "actions":
           return (
             <DropdownMenu>
               <DropdownMenuTrigger className="focus:outline-none">
-                <Ellipsis className="h-5 w-5 text-gray-500 hover:text-gray-700 transition-colors duration-200" />
+                <MoreHorizontal className="h-5 w-5 text-gray-500 hover:text-gray-700 transition-colors duration-200" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-background">
+              <DropdownMenuContent align="end">
                 {actions.map((action, index) => (
                   <DropdownMenuItem
                     key={index}
                     onClick={() => action.onClick(product._id)}
-                    className="cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+                    className="cursor-pointer"
                   >
                     {action.label}
                   </DropdownMenuItem>
@@ -205,13 +175,13 @@ const ProductTable: React.FC<ProductTableProps> = ({
             </DropdownMenu>
           );
         default:
-          return product[column.key as keyof Product]?.toString() || "";
+          return product[column.key]?.toString() || "";
       }
     },
-    [actions, getPrice, getStock, isProductAppliedToDiscount]
+    [actions, discount_id]
   );
 
-  const handleSort = useCallback((key: keyof Product) => {
+  const handleSort = useCallback((key: keyof Product | "applied_discount") => {
     setSortConfig((prevConfig) => ({
       key,
       direction:
@@ -224,27 +194,43 @@ const ProductTable: React.FC<ProductTableProps> = ({
   const sortedProducts = useMemo(() => {
     if (!sortConfig) return products;
     return [...products].sort((a, b) => {
-      const aValue = a[sortConfig.key];
-      const bValue = b[sortConfig.key];
-
-      if (aValue === undefined && bValue === undefined) return 0;
-      if (aValue === undefined) return sortConfig.direction === "asc" ? 1 : -1;
-      if (bValue === undefined) return sortConfig.direction === "asc" ? -1 : 1;
-
-      if (typeof aValue === "string" && typeof bValue === "string") {
+      if (sortConfig.key === "applied_discount") {
+        const aApplied =
+          a.applied_discounts?.includes(discount_id || "") || false;
+        const bApplied =
+          b.applied_discounts?.includes(discount_id || "") || false;
         return sortConfig.direction === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
+          ? Number(aApplied) - Number(bApplied)
+          : Number(bApplied) - Number(aApplied);
       }
 
-      return sortConfig.direction === "asc"
-        ? (aValue as number) - (bValue as number)
-        : (bValue as number) - (aValue as number);
+      const aValue = a[sortConfig.key as keyof Product] ?? "";
+      const bValue = b[sortConfig.key as keyof Product] ?? "";
+
+      if (aValue < bValue) {
+        return sortConfig.direction === "asc" ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === "asc" ? 1 : -1;
+      }
+      return 0;
     });
-  }, [products, sortConfig]);
+  }, [products, sortConfig, discount_id]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-t-2 border-blue-500 rounded-full"
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="overflow-x-auto shadow-lg rounded-lg">
+    <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -253,7 +239,8 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 key={column.key}
                 className={column.sortable ? "cursor-pointer select-none" : ""}
                 onClick={() =>
-                  column.sortable && handleSort(column.key as keyof Product)
+                  column.sortable &&
+                  handleSort(column.key as keyof Product | "applied_discount")
                 }
               >
                 <div className="flex items-center space-x-1">
@@ -285,7 +272,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ duration: 0.2 }}
-                className="transition-colors duration-200 hover:bg-background"
+                className="hover:bg-background"
               >
                 {columns.map((column) => (
                   <TableCell key={`${product._id}-${column.key}`}>

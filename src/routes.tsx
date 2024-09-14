@@ -10,11 +10,6 @@ import AddProductPage from "./pages/Product/AddProductPage";
 import EditProductPage from "./pages/Product/EditProductPage";
 import ProductManagementPage from "./pages/Product/ProductManagementPage";
 
-// Invoice Page
-import InvoiceManagementPage from "./pages/Invoice/InvoiceManagementPage";
-import CreateInvoice from "./pages/Invoice/CreateInvoice";
-import InvoiceDetail from "./pages/Invoice/InvoiceDetail";
-
 // Discount
 import DiscountPage from "@/pages/DiscountPage";
 
@@ -73,30 +68,6 @@ const publicRoutes = [
     element: (
       <DefaultLayout>
         <EditProductPage />
-      </DefaultLayout>
-    ),
-  },
-  {
-    path: "/invoice/management",
-    element: (
-      <DefaultLayout>
-        <InvoiceManagementPage />
-      </DefaultLayout>
-    ),
-  },
-  {
-    path: "/invoice/create/:order_id",
-    element: (
-      <DefaultLayout>
-        <CreateInvoice />
-      </DefaultLayout>
-    ),
-  },
-  {
-    path: "/invoice/:invoice_id",
-    element: (
-      <DefaultLayout>
-        <InvoiceDetail />
       </DefaultLayout>
     ),
   },

@@ -112,7 +112,7 @@ export const put = <T = any,>(url: string, body?: any): Promise<T> =>
   handleRequest("put", url, body).then((response) => response.data);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const del = <T = any,>(url: string): Promise<T> =>
+export const del = <T = any,>(url: string, p0: {}): Promise<T> =>
   handleRequest("delete", url).then((response) => response.data);
 
 // Public API calls (no authentication required)

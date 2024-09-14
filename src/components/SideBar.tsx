@@ -46,13 +46,8 @@ const menuItems = [
     category: "Transaction",
     items: [
       {
-        text: "Refunds",
-        path: "/refunds",
-        icon: <RefreshCcw className="h-4 w-4" />,
-      },
-      {
-        text: "Invoices",
-        path: "/invoice/management",
+        text: "Order",
+        path: "/order/management",
         icon: <Receipt className="h-4 w-4" />,
       },
       {

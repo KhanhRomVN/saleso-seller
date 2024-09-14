@@ -23,13 +23,13 @@ interface CategoryWithChildren extends Category {
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
+  onCategoriesSelected: (categories: Category[]) => void;
 }
 
 const CategoriesSelectedDialog: React.FC<Props> = ({
   isOpen,
   onClose,
-  setCategories,
+  onCategoriesSelected,
 }) => {
   const [categoryHierarchy, setCategoryHierarchy] = useState<
     CategoryWithChildren[]
@@ -64,11 +64,17 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
     }
   }, []);
 
+  const resetDialog = useCallback(() => {
+    setCategoryHierarchy([]);
+    setBreadcrumbs([]);
+    fetchCategories().then(setCurrentLevel);
+  }, [fetchCategories]);
+
   useEffect(() => {
     if (isOpen) {
-      fetchCategories().then(setCurrentLevel);
+      resetDialog();
     }
-  }, [isOpen, fetchCategories]);
+  }, [isOpen, resetDialog]);
 
   const handleCategoryClick = useCallback(
     async (category: CategoryWithChildren) => {
@@ -101,12 +107,27 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
       category_id: cat.category_id,
       category_name: cat.category_name,
     }));
-    setCategories(selectedCategories);
+    onCategoriesSelected(selectedCategories);
     onClose();
-  }, [breadcrumbs, setCategories, onClose]);
+  }, [breadcrumbs, onCategoriesSelected, onClose]);
+
+  const handleBack = useCallback(() => {
+    if (breadcrumbs.length > 1) {
+      const newBreadcrumbs = breadcrumbs.slice(0, -1);
+      setBreadcrumbs(newBreadcrumbs);
+      setCurrentLevel(newBreadcrumbs[newBreadcrumbs.length - 1].children || []);
+    } else {
+      resetDialog();
+    }
+  }, [breadcrumbs, resetDialog]);
+
+  const handleCloseDialog = useCallback(() => {
+    onClose();
+    resetDialog();
+  }, [onClose, resetDialog]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleCloseDialog}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Select Category</DialogTitle>
@@ -149,7 +170,11 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
             </ul>
           )}
         </ScrollArea>
-        <DialogFooter>
+        <DialogFooter className="flex justify-between">
+          <Button onClick={handleBack} disabled={breadcrumbs.length === 0}>
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
           <Button onClick={handleAddCategory}>Add Selected Categories</Button>
         </DialogFooter>
       </DialogContent>

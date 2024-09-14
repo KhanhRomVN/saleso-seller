@@ -6,7 +6,7 @@ import ProductTable from "../product/ProductTable";
 import DiscountDetail from "./DiscountDetail";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getPublic, put, del } from "@/utils/authUtils";
+import { getPublic, put } from "@/utils/authUtils";
 
 interface Discount {
   _id: string;
@@ -22,6 +22,25 @@ interface Discount {
   current_uses: number;
   customer_usage_limit: number;
   applicable_products: string[];
+}
+
+interface Product {
+  _id: string;
+  name: string;
+  image: string;
+  is_active: string;
+  seller_id: string;
+  price: string | number;
+  stock: number;
+  origin: string;
+  applied_discounts?: string[];
+}
+
+interface Column {
+  key: keyof Product | "actions" | "applied_discount";
+  header: string;
+  sortable?: boolean;
+  render?: (product: Product) => React.ReactNode;
 }
 
 interface DiscountTicketDialogProps {
@@ -56,7 +75,9 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
 
   const handleApplyProduct = async (productId: string) => {
     try {
-      await put(`/discount/products/${productId}/discounts/${discount_id}`);
+      await put(
+        `/discount/apply/products/${productId}/discounts/${discount_id}`
+      );
       toast.success("Product applied to discount successfully");
     } catch (error) {
       console.error("Error applying product to discount:", error);
@@ -66,7 +87,9 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
 
   const handleCancelProduct = async (productId: string) => {
     try {
-      await del(`/discount/products/${productId}/discounts/${discount_id}`);
+      await put(
+        `/discount/remove/products/${productId}/discounts/${discount_id}`
+      );
       toast.success("Product removed from discount successfully");
     } catch (error) {
       console.error("Error removing product from discount:", error);
@@ -76,13 +99,14 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
 
   if (!discountData) return null;
 
-  const columns = [
-    { key: "name", header: "Product Name" },
-    { key: "price", header: "Price" },
-    { key: "stock", header: "Stock" },
-    { key: "is_active", header: "Status" },
-    { key: "apply", header: "Apply" },
-    { key: "actions", header: "Actions" },
+  const columns: Column[] = [
+    { key: "name", header: "Name", sortable: true },
+    { key: "price", header: "Price", sortable: false },
+    { key: "stock", header: "Stock", sortable: true },
+    { key: "origin", header: "Origin", sortable: true },
+    { key: "is_active", header: "Status", sortable: true },
+    { key: "applied_discount", header: "Applied Discount", sortable: true },
+    { key: "actions", header: "Action" },
   ];
 
   const actions = [
@@ -121,9 +145,9 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
 
             <TabsContent value="applyProduct">
               <ProductTable
+                discount_id={discount_id}
                 columns={columns}
                 actions={actions}
-                discount_id={discountData._id}
               />
             </TabsContent>
 

@@ -1,32 +1,24 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProductTable from "@/components/product/ProductTable";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, RefreshCw } from "lucide-react";
+import { motion } from "framer-motion";
+import { put } from "@/utils/authUtils";
 
 interface Product {
   _id: string;
   name: string;
-  images: string[];
-  price?: number;
-  attributes?: Attribute[];
-  countryOfOrigin: string;
-  stock?: number;
-  units_sold: number;
+  image: string;
   is_active: string;
-  upcoming_discounts: string[];
-  ongoing_discounts: string[];
-  expired_discounts: string[];
-}
-
-interface Attribute {
-  attributes_value: string;
-  attributes_quantity: number;
-  attributes_price: number;
+  seller_id: string;
+  price: string | number;
+  stock: number;
+  origin: string;
 }
 
 interface Column {
-  key: keyof Product | "actions" | "apply";
+  key: keyof Product | "actions";
   header: string;
   sortable?: boolean;
   render?: (product: Product) => React.ReactNode;
@@ -34,13 +26,14 @@ interface Column {
 
 const ProductManagementPage: React.FC = () => {
   const navigate = useNavigate();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   const columns: Column[] = [
-    { key: "name", header: "Name" },
-    { key: "price", header: "Price" },
-    { key: "countryOfOrigin", header: "Country" },
-    { key: "stock", header: "Stock" },
-    { key: "units_sold", header: "Sold" },
-    { key: "is_active", header: "Status" },
+    { key: "name", header: "Name", sortable: true },
+    { key: "price", header: "Price", sortable: true },
+    { key: "stock", header: "Stock", sortable: true },
+    { key: "origin", header: "Origin", sortable: true },
+    { key: "is_active", header: "Status", sortable: true },
     { key: "actions", header: "Action" },
   ];
 
@@ -49,11 +42,12 @@ const ProductManagementPage: React.FC = () => {
   };
 
   const handleChangeStatus = async (productId: string) => {
-    console.log(`Changing status for product ${productId}`);
+    await put<{ message: any }>(`/product/toggle/${productId}`, {});
   };
 
   const handleDelete = async (productId: string) => {
     console.log(`Deleting product ${productId}`);
+    // Implement delete logic here
   };
 
   const actions = [
@@ -66,18 +60,47 @@ const ProductManagementPage: React.FC = () => {
     navigate("/product/add");
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    // Implement refresh logic here
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulating API call
+    setIsRefreshing(false);
+  };
+
   return (
-    <div className="container mx-auto p-2">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="container mx-auto p-4"
+    >
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Product Management</h1>
-        <Button onClick={handleAddProduct}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add New Product
-        </Button>
+        <h1 className="text-3xl font-bold text-gray-800">Product Management</h1>
+        <div className="space-x-2">
+          <Button
+            onClick={handleRefresh}
+            variant="outline"
+            disabled={isRefreshing}
+          >
+            <RefreshCw
+              className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </Button>
+          <Button onClick={handleAddProduct}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Add New Product
+          </Button>
+        </div>
       </div>
-      <div className="bg-background_secondary rounded-lg">
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="bg-background_secondary shadow-lg rounded-lg overflow-hidden"
+      >
         <ProductTable columns={columns} actions={actions} />
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

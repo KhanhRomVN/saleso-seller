@@ -63,12 +63,9 @@ const AddProductPage: React.FC = () => {
     tags: [],
     variants: [],
   });
-  // images
   const [images, setImages] = useState<string[]>([]);
-  // categories
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-  // tags
   const [tags, setTags] = useState<string[]>([]);
 
   const fadeInUp = useMemo(
@@ -93,16 +90,30 @@ const AddProductPage: React.FC = () => {
     [toast]
   );
 
-  const handleDeleteCategory = (categoryToDelete: Category) => {
-    setCategories((prevCategories) =>
-      prevCategories.filter(
+  const handleSetCategories = useCallback((newCategories: Category[]) => {
+    setCategories(newCategories);
+    setProductData((prevData) => ({
+      ...prevData,
+      categories: newCategories,
+    }));
+  }, []);
+
+  const handleDeleteCategory = useCallback(
+    (categoryToDelete: Category) => {
+      const updatedCategories = categories.filter(
         (category) => category.category_id !== categoryToDelete.category_id
-      )
-    );
-    toast({
-      description: "Category removed successfully",
-    });
-  };
+      );
+      setCategories(updatedCategories);
+      setProductData((prevData) => ({
+        ...prevData,
+        categories: updatedCategories,
+      }));
+      toast({
+        description: "Category removed successfully",
+      });
+    },
+    [categories, toast]
+  );
 
   // submit to create new product
   const handleSubmit = async () => {
@@ -121,9 +132,7 @@ const AddProductPage: React.FC = () => {
         expired_discounts: [],
       };
 
-      console.log(product);
-
-      await post("/product/create", product);
+      await post("/product", product);
 
       toast({
         description: "Product created successfully",
@@ -337,7 +346,7 @@ const AddProductPage: React.FC = () => {
       <CategoriesSelectedDialog
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
-        setCategories={setCategories}
+        onCategoriesSelected={handleSetCategories}
       />
     </motion.div>
   );

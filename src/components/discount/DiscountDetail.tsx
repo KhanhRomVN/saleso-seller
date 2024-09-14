@@ -1,10 +1,12 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tag, ToggleLeft } from "lucide-react";
+import { Tag, ToggleLeft, Trash2 } from "lucide-react";
+import { del, put } from "@/utils/authUtils";
 
 interface Discount {
   _id: string;
@@ -30,6 +32,43 @@ const DiscountDetail: React.FC<DiscountDetailProps> = ({ discountData }) => {
   const inputVariants = {
     focus: { scale: 1.05 },
     tap: { scale: 0.95 },
+  };
+  const navigate = useNavigate();
+
+  const handleStatusChange = async () => {
+    try {
+      const response = await put<{ message: any }>(
+        `/discount/${discountData._id}/status`,
+        {}
+      );
+
+      if (response) {
+        navigate(0);
+      } else {
+        console.error("Failed to update discount status");
+      }
+    } catch (error) {
+      console.error("Error updating discount status:", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this discount?")) {
+      try {
+        const response = await del<{ message: any }>(
+          `/discount/${discountData._id}`,
+          {}
+        );
+
+        if (response) {
+          navigate(0);
+        } else {
+          console.error("Failed to delete discount");
+        }
+      } catch (error) {
+        console.error("Error deleting discount:", error);
+      }
+    }
   };
 
   return (
@@ -142,18 +181,33 @@ const DiscountDetail: React.FC<DiscountDetailProps> = ({ discountData }) => {
               />
             </motion.div>
           </div>
-          <div className="flex items-end">
+          <div className="flex items-end space-x-2">
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="w-full"
+              className="w-1/2"
             >
               <Button
                 variant={discountData.is_active ? "default" : "outline"}
                 className="w-full"
+                onClick={handleStatusChange}
               >
                 <ToggleLeft className="mr-2" />
                 {discountData.is_active ? "Active" : "Inactive"}
+              </Button>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-1/2"
+            >
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={handleDelete}
+              >
+                <Trash2 className="mr-2" />
+                Delete
               </Button>
             </motion.div>
           </div>

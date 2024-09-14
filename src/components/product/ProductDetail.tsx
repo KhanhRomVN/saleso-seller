@@ -338,7 +338,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
         isOpen={isVariantDialogOpen}
         onClose={() => setIsVariantDialogOpen(false)}
         onVariantSelected={handleVariantSelected}
-        categoryId={productData.categories[0]?.category_id}
+        categoryId={productData.categories[0]?.category_id || ""}
         selectedVariants={productData.variants.map((v) => v.sku)}
       />
     </div>
