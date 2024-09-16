@@ -1,25 +1,14 @@
-// Public Page
 import HomePage from "@/pages/HomePage";
-
-// Auth Page
 import EmailPage from "./pages/RegisterPage";
 import LoginPage from "@/pages/LoginPage";
-
-// Product Page
 import AddProductPage from "./pages/Product/AddProductPage";
 import EditProductPage from "./pages/Product/EditProductPage";
 import ProductManagementPage from "./pages/Product/ProductManagementPage";
-
-// Discount
 import DiscountPage from "@/pages/DiscountPage";
-
-// Feedback
 import FeedbackPage from "./pages/FeedbackPage";
-
-// Setting
 import SettingPage from "./pages/SettingPage";
+import OrderPage from "./pages/OrderPage";
 
-// Layout Component
 import DefaultLayout from "@/layout/defaultLayout";
 
 const publicRoutes = [
@@ -76,6 +65,14 @@ const publicRoutes = [
     element: (
       <DefaultLayout>
         <FeedbackPage />
+      </DefaultLayout>
+    ),
+  },
+  {
+    path: "/order/management",
+    element: (
+      <DefaultLayout>
+        <OrderPage />
       </DefaultLayout>
     ),
   },

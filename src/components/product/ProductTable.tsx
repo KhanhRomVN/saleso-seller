@@ -272,7 +272,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ duration: 0.2 }}
-                className="hover:bg-background"
+                className="hover:bg-background_secondary"
               >
                 {columns.map((column) => (
                   <TableCell key={`${product._id}-${column.key}`}>

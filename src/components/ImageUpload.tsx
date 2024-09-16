@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,6 +27,7 @@ interface ImageUploadProps {
 const ImageUpload: React.FC<ImageUploadProps> = ({
   max = 1,
   isCrop = false,
+  images,
   setImages,
 }) => {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -51,7 +52,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     if (isCrop) {
       setIsModalOpen(true);
     } else {
-      console.log("Cc");
       handleUploadImages(files);
     }
   };
@@ -91,26 +91,35 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     setIsModalOpen(false);
   };
 
+  const handleRemoveImage = (index: number) => {
+    setImages((prevImages) => prevImages.filter((_, i) => i !== index));
+  };
+
   return (
     <>
-      <div
-        className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer"
-        onClick={() => fileInputRef.current?.click()}
-        onDrop={handleDrop}
-        onDragOver={(e) => e.preventDefault()}
-      >
-        <input
-          type="file"
-          ref={fileInputRef}
-          className="hidden"
-          accept="image/*"
-          multiple={max > 1}
-          onChange={handleFileInputChange}
-        />
-        <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
-        <p className="mt-2 text-sm text-gray-600">
-          Drop your image or upload here
-        </p>
+      <div className="space-y-4">
+        <div
+          className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer transition-colors hover:border-gray-400"
+          onClick={() => fileInputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+        >
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*"
+            multiple={max > 1}
+            onChange={handleFileInputChange}
+          />
+          <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
+          <p className="mt-2 text-sm text-gray-600">
+            Drop your image here or click to upload
+          </p>
+          <p className="mt-1 text-xs text-gray-500">
+            {max > 1 ? `Up to ${max} images allowed` : "Only 1 image allowed"}
+          </p>
+        </div>
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

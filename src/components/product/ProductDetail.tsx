@@ -13,7 +13,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Package, MapPin, Info, Tag, Layers } from "lucide-react";
+
 import { motion, AnimatePresence } from "framer-motion";
 import VariantDialog from "@/components/VariantDialog";
 import { useToast } from "@/components/ui/use-toast";
@@ -170,51 +171,71 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
 
   return (
     <div className="bg-background_secondary w-full p-4 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Product Detail</h2>
+      <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-600 text-transparent bg-clip-text">
+        Product Detail
+      </h2>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div>
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="name" className="text-gray-300 flex items-center">
+            <Tag className="mr-2 h-5 w-5" />
+            Name
+          </Label>
           <Input
             id="name"
             name="name"
             value={productData.name}
             onChange={handleInputChange}
-            className="mt-1"
+            className="mt-2  border-gray-700 text-gray-200"
           />
         </div>
 
         <div>
-          <Label htmlFor="description">Description</Label>
+          <Label
+            htmlFor="description"
+            className="text-gray-300 flex items-center"
+          >
+            <Info className="mr-2 h-5 w-5" />
+            Description
+          </Label>
           <Textarea
             id="description"
             name="description"
             value={productData.description || ""}
             onChange={handleInputChange}
-            className="mt-1"
+            className="mt-2  border-gray-700 text-gray-200"
           />
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex gap-6">
           <div className="flex-1">
-            <Label htmlFor="origin">Origin</Label>
+            <Label htmlFor="origin" className="text-gray-300 flex items-center">
+              <Package className="mr-2 h-5 w-5" />
+              Origin
+            </Label>
             <Input
               id="origin"
               name="origin"
               value={productData.origin}
               onChange={handleInputChange}
-              className="mt-1"
+              className="mt-2 border-gray-700 text-gray-200"
             />
           </div>
 
           <div className="flex-1">
-            <Label htmlFor="address">Address</Label>
+            <Label
+              htmlFor="address"
+              className="text-gray-300 flex items-center"
+            >
+              <MapPin className="mr-2 h-5 w-5" />
+              Address
+            </Label>
             <Input
               id="address"
               name="address"
               value={productData.address}
               onChange={handleInputChange}
-              className="mt-1"
+              className="mt-2 border-gray-700 text-gray-200"
             />
           </div>
         </div>
@@ -226,9 +247,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
             exit={{ opacity: 0, height: 0 }}
           >
             <div>
-              <p className="text-lg font-semibold mb-2">Variants</p>
+              <p className="text-xl font-semibold mb-3 bg-gradient-to-r from-blue-400 to-green-400 text-transparent bg-clip-text flex items-center">
+                {/* Layer Icon removed */}
+                <Layers className="mr-2 h-5 w-5" />
+                Variants
+              </p>
               {productData.variants.map((variant, index) => (
-                <div key={index} className="flex space-x-2 mb-2">
+                <div key={index} className="flex space-x-3 mb-3">
                   <Input
                     placeholder="SKU"
                     name="sku"
@@ -236,6 +261,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
                     onChange={(e) => handleVariantChange(e, index)}
                     onClick={() => openVariantDialog(index)}
                     readOnly
+                    className="bg-gray-800 border-gray-700 text-gray-200"
                   />
                   <Input
                     type="number"
@@ -243,6 +269,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
                     name="stock"
                     value={variant.stock}
                     onChange={(e) => handleVariantChange(e, index)}
+                    className="bg-gray-800 border-gray-700 text-gray-200"
                   />
                   <Input
                     type="number"
@@ -250,18 +277,22 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
                     name="price"
                     value={variant.price}
                     onChange={(e) => handleVariantChange(e, index)}
+                    className="bg-gray-800 border-gray-700 text-gray-200"
                   />
                   <Button
                     variant="destructive"
                     size="icon"
                     onClick={() => deleteVariant(index)}
-                    className="p-2"
+                    className="p-2 bg-red-600 hover:bg-red-700"
                   >
                     <Trash2 className="h-5 w-5" />
                   </Button>
                 </div>
               ))}
-              <Button onClick={handleNewVariant} className="mt-2">
+              <Button
+                onClick={handleNewVariant}
+                className="mt-3 bg-indigo-600 hover:bg-indigo-700"
+              >
                 <Plus className="h-5 w-5 mr-2" /> New Variant
               </Button>
             </div>
