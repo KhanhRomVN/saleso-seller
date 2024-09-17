@@ -8,6 +8,7 @@ import DiscountPage from "@/pages/DiscountPage";
 import FeedbackPage from "./pages/FeedbackPage";
 import SettingPage from "./pages/SettingPage";
 import OrderPage from "./pages/OrderPage";
+import ReversalPage from "./pages/ReversalPage";
 
 import DefaultLayout from "@/layout/defaultLayout";
 
@@ -81,6 +82,14 @@ const publicRoutes = [
     element: (
       <DefaultLayout>
         <SettingPage />
+      </DefaultLayout>
+    ),
+  },
+  {
+    path: "/reversal",
+    element: (
+      <DefaultLayout>
+        <ReversalPage />
       </DefaultLayout>
     ),
   },

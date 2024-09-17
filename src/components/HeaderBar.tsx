@@ -26,11 +26,11 @@ const HeaderBar: React.FC = () => {
   };
 
   return (
-    <div className="w-full fixed top-0 pl-[230px] z-50 flex">
-      <Separator orientation="vertical" className="h-full" />
+    <div className="w-full fixed top-0 md:pl-[230px] z-50 flex">
+      <Separator orientation="vertical" className="h-full hidden md:block" />
       <div className="flex-grow">
         <div className="bg-[#1a1d1f] flex justify-between h-[61px] items-center px-5">
-          <div className="flex items-center bg-background p-1 rounded-lg w-[400px] max-w-[50%]">
+          <div className="flex items-center bg-background p-1 rounded-lg w-full md:w-[400px] md:max-w-[50%]">
             <Search className="text-muted-foreground mr-2" size={20} />
             <Input
               placeholder="Search info for you..."
@@ -46,7 +46,7 @@ const HeaderBar: React.FC = () => {
             )}
           </div>
           {currentUser && (
-            <div className="flex items-center">
+            <div className="hidden md:flex items-center">
               <Avatar className="w-8 h-8 mr-2 rounded-lg">
                 <AvatarImage
                   src="/api/placeholder/40/40"

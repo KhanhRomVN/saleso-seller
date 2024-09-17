@@ -1,3 +1,4 @@
+import React from "react";
 import { Link } from "react-router-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,67 +15,83 @@ import {
   MessageSquare,
   Settings,
   LogOut,
+  X,
 } from "lucide-react";
+
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
 const menuItems = [
   {
-    category: "Main Menu",
+    category: "Main",
     items: [
       {
-        text: "Overview",
-        path: "/",
+        path: "/dashboard",
         icon: <LayoutDashboard className="h-4 w-4" />,
+        text: "Dashboard",
       },
       {
-        text: "Analytics",
         path: "/analytics",
         icon: <BarChart className="h-4 w-4" />,
+        text: "Analytics",
       },
+    ],
+  },
+  {
+    category: "Sales",
+    items: [
       {
-        text: "Product",
         path: "/product/management",
         icon: <Store className="h-4 w-4" />,
+        text: "Products",
       },
       {
-        text: "Discount",
-        path: "/discount",
-        icon: <DollarSign className="h-4 w-4" />,
-      },
-    ],
-  },
-  {
-    category: "Transaction",
-    items: [
-      {
-        text: "Order",
         path: "/order/management",
-        icon: <Receipt className="h-4 w-4" />,
+        icon: <DollarSign className="h-4 w-4" />,
+        text: "Orders",
       },
       {
-        text: "Returns",
-        path: "/returns",
+        path: "/reversal",
         icon: <RotateCcw className="h-4 w-4" />,
+        text: "Reversal",
       },
     ],
   },
   {
-    category: "General",
+    category: "Management",
     items: [
       {
-        text: "Feedback",
         path: "/feedback",
-        icon: <MessageSquare className="h-4 w-4" />,
+        icon: <Receipt className="h-4 w-4" />,
+        text: "Feedback",
       },
+    ],
+  },
+  {
+    category: "Support",
+    items: [
       {
-        text: "Setting",
-        path: "/setting",
+        path: "/messages",
+        icon: <MessageSquare className="h-4 w-4" />,
+        text: "Messages",
+      },
+    ],
+  },
+  {
+    category: "Settings",
+    items: [
+      {
+        path: "/settings",
         icon: <Settings className="h-4 w-4" />,
+        text: "Settings",
       },
     ],
   },
 ];
 
-const Sidebar = () => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -84,13 +101,24 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="box-border bg-background_secondary flex flex-col fixed inset-y-0 left-0 z-50 w-[230px]">
+    <div
+      className={`box-border bg-background_secondary flex flex-col fixed inset-y-0 left-0 z-50 w-[230px] transition-transform duration-300 ease-in-out ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      } md:translate-x-0`}
+    >
       <div className="h-[61px] flex items-center pl-4">
         <img
           src="https://i.ibb.co/CMSJMK3/Brandmark-make-your-logo-in-minutes-removebg-preview.png"
           alt="logo"
           className="object-cover h-3/5"
         />
+        <Button
+          variant="ghost"
+          className="md:hidden absolute top-2 right-2"
+          onClick={onClose}
+        >
+          <X />
+        </Button>
       </div>
 
       <Separator />
