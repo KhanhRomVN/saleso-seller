@@ -44,7 +44,7 @@ const DiscountPage: React.FC = () => {
       try {
         setLoading(true);
         // Get all seller discounts
-        const response = await get<Discount[]>("/discount");
+        const response = await get<Discount[]>("/discount", "product");
         console.log(response);
         setDiscounts(response);
         setError(null);

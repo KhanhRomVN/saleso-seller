@@ -147,7 +147,7 @@ const AccountContent: React.FC = () => {
     try {
       setIsLoading(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await get<any>("/user");
+      const response = await get<any>("/user", "user");
       console.log(response);
       setUser(response);
     } catch (error) {
@@ -162,7 +162,7 @@ const AccountContent: React.FC = () => {
     try {
       setIsLoading(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await get<any>("/user/user-detail");
+      const response = await get<any>("/user/user-detail", "user");
       console.log(response);
       setSellerDetail(response);
     } catch (error) {
@@ -190,10 +190,12 @@ const AccountContent: React.FC = () => {
       setIsLoading(true);
       if (field === "username") {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await put<any>("/user/update/username", { username: user.username });
+        await put<any>("/user/update/username", "user", {
+          username: user.username,
+        });
       } else {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await put<any>("/user/update/user-detail", sellerDetail);
+        await put<any>("/user/update/user-detail", "user", sellerDetail);
       }
       toast.success(
         `${
@@ -251,7 +253,7 @@ const AccountContent: React.FC = () => {
     try {
       setIsLoading(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await post<any>("/user/verify", {
+      await post<any>("/user/verify", "user", {
         email: formState.verifyEmail,
         password: formState.verifyPassword,
       });
@@ -272,7 +274,7 @@ const AccountContent: React.FC = () => {
     try {
       setIsLoading(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await post<any>("/user/verify/new-email", {
+      await post<any>("/user/verify/new-email", "user", {
         newEmail: formState.newEmail,
       });
       setDialogState((prev) => ({ ...prev, email: false, otp: true }));
@@ -289,7 +291,7 @@ const AccountContent: React.FC = () => {
     try {
       setIsLoading(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await post<any>("/user/update-email", {
+      await post<any>("/user/update-email", "user", {
         newEmail: formState.newEmail,
         otp: formState.emailOtp,
       });
@@ -308,7 +310,7 @@ const AccountContent: React.FC = () => {
     try {
       setIsLoading(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await post<any>("/user/update/password", {
+      await post<any>("/user/update/password", "user", {
         newPassword: formState.newPassword,
       });
       setDialogState((prev) => ({ ...prev, password: false }));
@@ -325,7 +327,7 @@ const AccountContent: React.FC = () => {
     try {
       setIsLoading(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await post<any>("/user/forget-password", {
+      await post<any>("/user/forget-password", "user", {
         email: formState.forgetPasswordEmail,
       });
       toast.success(
@@ -348,7 +350,7 @@ const AccountContent: React.FC = () => {
     try {
       setIsLoading(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await post<any>("/user/update/forget-password", {
+      await post<any>("/user/update/forget-password", "user", {
         otp: formState.otp,
         newPassword: formState.newPasswordForReset,
       });

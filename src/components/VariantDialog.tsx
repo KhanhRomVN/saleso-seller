@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Tag } from "lucide-react";
+import { getPublic } from "../utils/authUtils";
 
 interface VariantOption {
   _id: string;
@@ -45,8 +46,9 @@ const VariantDialog: React.FC<VariantDialogProps> = ({
         setIsLoading(true);
         setError(null);
         try {
-          const response = await fetch(
-            `http://localhost:8080/variant/category/${categoryId}`
+          const response = await getPublic(
+            `/variant/category/${categoryId}`,
+            "product"
           );
           if (!response.ok) {
             throw new Error("Failed to fetch variants");

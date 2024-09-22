@@ -116,7 +116,11 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
     if (!validateForm()) return;
 
     try {
-      const response = await post<Discount>("/discount", discountData);
+      const response = await post<Discount>(
+        "/discount",
+        "product",
+        discountData
+      );
       toast.success("Discount created successfully!");
       onSubmit(response);
       onClose();

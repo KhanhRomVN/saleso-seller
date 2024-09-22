@@ -82,7 +82,7 @@ export default function OrderPage() {
 
   const fetchOrders = async () => {
     try {
-      const data = await get<Order[]>(`/order/${selectedStatus}`);
+      const data = await get<Order[]>(`/order/${selectedStatus}`, "order");
       setOrders(data || []);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
@@ -94,7 +94,8 @@ export default function OrderPage() {
   const handleProductHover = async (productId: string) => {
     try {
       const data = await get<ProductDetails>(
-        `/product/by-product/${productId}`
+        `/product/by-product/${productId}`,
+        "product"
       );
       setProductDetails(data);
     } catch (error) {
@@ -104,7 +105,7 @@ export default function OrderPage() {
 
   const handleAccept = async (orderId: string) => {
     try {
-      await put(`/order/accept/${orderId}`);
+      await put(`/order/accept/${orderId}`, "order");
       toast.success("Order accepted successfully");
       fetchOrders();
     } catch (error) {
@@ -115,7 +116,7 @@ export default function OrderPage() {
 
   const handleRefuse = async (orderId: string) => {
     try {
-      await put(`/order/refuse/${orderId}`);
+      await put(`/order/refuse/${orderId}`, "order");
       toast.success("Order refused successfully");
       fetchOrders();
     } catch (error) {

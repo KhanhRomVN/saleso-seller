@@ -132,7 +132,7 @@ const AddProductPage: React.FC = () => {
         expired_discounts: [],
       };
 
-      await post("/product", product);
+      await post("/product", "product", product);
 
       toast({
         description: "Product created successfully",

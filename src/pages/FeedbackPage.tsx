@@ -85,7 +85,7 @@ export default function FeedbackPage() {
 
   const fetchProducts = async () => {
     try {
-      const data = await post<Product[]>("/product/by-seller", {
+      const data = await post<Product[]>("/product/by-seller", "product", {
         minimum: "true",
       });
       setProducts(data);
@@ -99,7 +99,7 @@ export default function FeedbackPage() {
 
   const fetchFeedbacks = async () => {
     try {
-      const data = await post<Feedback[]>("/feedback/by-seller", {
+      const data = await post<Feedback[]>("/feedback/by-seller", "product", {
         product_id: selectedProduct,
       });
       setFeedbacks(data);
@@ -111,7 +111,8 @@ export default function FeedbackPage() {
   const fetchProductDetails = async () => {
     try {
       const data = await get<ProductDetails>(
-        `/product/by-product/${selectedProduct}`
+        `/product/by-product/${selectedProduct}`,
+        "product"
       );
       setProductDetails(data);
     } catch (error) {
@@ -121,7 +122,9 @@ export default function FeedbackPage() {
 
   const handleReply = async (feedbackId: string) => {
     try {
-      await post(`/feedback/reply/${feedbackId}`, { comment: replyText });
+      await post(`/feedback/reply/${feedbackId}`, "product", {
+        comment: replyText,
+      });
       setReplyText("");
       fetchFeedbacks(); // Refresh feedbacks after replying
     } catch (error) {

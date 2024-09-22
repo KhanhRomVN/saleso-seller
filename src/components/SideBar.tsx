@@ -53,15 +53,10 @@ const menuItems = [
         text: "Orders",
       },
       {
-        path: "/reversal",
+        path: "/discount",
         icon: <RotateCcw className="h-4 w-4" />,
-        text: "Reversal",
+        text: "Discount",
       },
-    ],
-  },
-  {
-    category: "Management",
-    items: [
       {
         path: "/feedback",
         icon: <Receipt className="h-4 w-4" />,

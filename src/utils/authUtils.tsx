@@ -1,80 +1,134 @@
-import axios, { AxiosResponse } from "axios";
-import { BACKEND_URI } from "@/api";
+import axios, { AxiosError, AxiosResponse } from "axios";
+import {
+  BACKEND_USER_URI,
+  BACKEND_ORDER_URI,
+  BACKEND_PRODUCT_URI,
+  BACKEND_ANALYTICS_URI,
+  BACKEND_OTHER_URI,
+} from "@/api/index";
+
+type ServiceAPI = "user" | "order" | "product" | "analytics" | "other";
+
+const getBackendURI = (service: ServiceAPI): string => {
+  switch (service) {
+    case "user":
+      return BACKEND_USER_URI;
+    case "order":
+      return BACKEND_ORDER_URI;
+    case "product":
+      return BACKEND_PRODUCT_URI;
+    case "analytics":
+      return BACKEND_ANALYTICS_URI;
+    case "other":
+      return BACKEND_OTHER_URI;
+    default:
+      throw new Error("Invalid service API");
+  }
+};
 
 interface RefreshTokenResponse {
   newAccessToken: string;
   newRefreshToken: string;
+  user: {
+    user_id: string;
+    username: string;
+    role: string;
+  };
 }
 
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+const subscribeTokenRefresh = (cb: (token: string) => void) => {
+  refreshSubscribers.push(cb);
+};
+
+const onTokenRefreshed = (token: string) => {
+  refreshSubscribers.map((cb) => cb(token));
+  refreshSubscribers = [];
+};
+
 const refreshTokenAndRetry = async (
-  method: string,
-  url: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  body?: any
+  error: AxiosError
 ): Promise<AxiosResponse> => {
-  const refreshToken = localStorage.getItem("refreshToken");
-
-  if (!refreshToken) {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    alert("Your session has expired. Please log in again.");
-    window.location.href = "/login";
-    throw new Error("No refresh token available");
-  }
-
   try {
-    const response = await axios.get<RefreshTokenResponse>(
-      `${BACKEND_URI}/auth/refresh/token`,
-      {
-        headers: { refreshToken },
+    const refreshToken = localStorage.getItem("refreshToken");
+
+    if (!refreshToken) {
+      throw new Error("No refresh token available");
+    }
+
+    if (!isRefreshing) {
+      isRefreshing = true;
+      const response = await axios.get<RefreshTokenResponse>(
+        `${getBackendURI("user")}/auth/refresh/token`,
+        {
+          headers: { refreshToken },
+        }
+      );
+
+      const { newAccessToken, newRefreshToken, user } = response.data;
+
+      localStorage.setItem("accessToken", newAccessToken);
+      localStorage.setItem("refreshToken", newRefreshToken);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      isRefreshing = false;
+      onTokenRefreshed(newAccessToken);
+
+      if (error.config) {
+        error.config.headers["accessToken"] = newAccessToken;
+        return axios(error.config);
       }
-    );
+    }
 
-    const { newAccessToken, newRefreshToken } = response.data;
-
-    localStorage.setItem("accessToken", newAccessToken);
-    localStorage.setItem("refreshToken", newRefreshToken);
-
-    return axios({
-      method,
-      url: `${BACKEND_URI}${url}`,
-      data: body,
-      headers: { accessToken: newAccessToken },
+    return new Promise((resolve) => {
+      subscribeTokenRefresh((token: string) => {
+        if (error.config) {
+          error.config.headers["accessToken"] = token;
+          resolve(axios(error.config));
+        }
+      });
     });
-  } catch (error) {
+  } catch (refreshError) {
+    isRefreshing = false;
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
-    alert("Your session has expired. Please log in again.");
+    localStorage.removeItem("user");
     window.location.href = "/login";
-    throw error;
+    return Promise.reject(refreshError);
   }
 };
+
+axios.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    if (error.response?.status === 401 && error.config) {
+      return refreshTokenAndRetry(error);
+    }
+    return Promise.reject(error);
+  }
+);
 
 const handleRequest = async (
   method: "get" | "post" | "put" | "delete",
   url: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  service: ServiceAPI,
   body?: any
-): Promise<AxiosResponse> => {
+): Promise<any> => {
   const accessToken = localStorage.getItem("accessToken");
-  if (!accessToken) {
-    console.log("No access token found. Attempting to refresh...");
-    return refreshTokenAndRetry(method, url, body);
-  }
-
   try {
     const response = await axios({
       method,
-      url: `${BACKEND_URI}${url}`,
+      url: `${getBackendURI(service)}${url}`,
       data: body,
       headers: { accessToken },
     });
-    return response;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    if (error.response?.data?.error === "Unauthorized - Invalid accessToken") {
-      console.log("Invalid access token. Attempting to refresh...");
-      return refreshTokenAndRetry(method, url, body);
+    return response.data.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      // Axios sẽ tự động xử lý lỗi 401 thông qua interceptor
+      throw error;
     }
     throw error;
   }
@@ -83,51 +137,70 @@ const handleRequest = async (
 const handlePublicRequest = async (
   method: "get" | "post" | "put" | "delete",
   url: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  service: ServiceAPI,
   body?: any
-): Promise<AxiosResponse> => {
-  // eslint-disable-next-line no-useless-catch
+): Promise<any> => {
   try {
-    return await axios({
+    const response = await axios({
       method,
-      url: `${BACKEND_URI}${url}`,
+      url: `${getBackendURI(service)}${url}`,
       data: body,
     });
+    return response.data.data;
   } catch (error) {
     throw error;
   }
 };
 
 // Authenticated API calls
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const get = <T = any,>(url: string): Promise<T> =>
-  handleRequest("get", url).then((response) => response.data);
+export const get = <T = any,>(url: string, service: ServiceAPI): Promise<T> =>
+  handleRequest("get", url, service);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const post = <T = any,>(url: string, body?: any): Promise<T> =>
-  handleRequest("post", url, body).then((response) => response.data);
+export const post = <T = any,>(
+  url: string,
+  service: ServiceAPI,
+  body?: any
+): Promise<T> => handleRequest("post", url, service, body);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const put = <T = any,>(url: string, body?: any): Promise<T> =>
-  handleRequest("put", url, body).then((response) => response.data);
+export const put = <T = any,>(
+  url: string,
+  service: ServiceAPI,
+  body?: any
+): Promise<T> => handleRequest("put", url, service, body);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const del = <T = any,>(url: string, p0: {}): Promise<T> =>
-  handleRequest("delete", url).then((response) => response.data);
+export const del = <T = any,>(url: string, service: ServiceAPI): Promise<T> =>
+  handleRequest("delete", url, service);
 
 // Public API calls (no authentication required)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getPublic = <T = any,>(url: string): Promise<T> =>
-  handlePublicRequest("get", url).then((response) => response.data);
+export const getPublic = <T = any,>(
+  url: string,
+  service: ServiceAPI
+): Promise<T> => handlePublicRequest("get", url, service);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const postPublic = <T = any,>(url: string, body?: any): Promise<T> =>
-  handlePublicRequest("post", url, body).then((response) => response.data);
+export const postPublic = <T = any,>(
+  url: string,
+  service: ServiceAPI,
+  body?: any
+): Promise<T> => handlePublicRequest("post", url, service, body);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const putPublic = <T = any,>(url: string, body?: any): Promise<T> =>
-  handlePublicRequest("put", url, body).then((response) => response.data);
+export const putPublic = <T = any,>(
+  url: string,
+  service: ServiceAPI,
+  body?: any
+): Promise<T> => handlePublicRequest("put", url, service, body);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const delPublic = <T = any,>(url: string): Promise<T> =>
-  handlePublicRequest("delete", url).then((response) => response.data);
+export const delPublic = <T = any,>(
+  url: string,
+  service: ServiceAPI
+): Promise<T> => handlePublicRequest("delete", url, service);
+
+export const authUtils = {
+  get,
+  post,
+  put,
+  del,
+  getPublic,
+  postPublic,
+  putPublic,
+  delPublic,
+};

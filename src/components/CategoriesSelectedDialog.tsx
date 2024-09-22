@@ -46,7 +46,7 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
       const url = parentId
         ? `/category/children-of-parent/${parentId}`
         : "/category/level/1";
-      const response = await getPublic(url);
+      const response = await getPublic(url, "product");
       const transformedCategories: CategoryWithChildren[] = response.map(
         (item: any) => ({
           category_id: item._id,

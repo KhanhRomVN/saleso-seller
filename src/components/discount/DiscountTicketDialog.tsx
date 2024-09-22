@@ -64,7 +64,8 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
   const fetchDiscountData = async () => {
     try {
       const response = await getPublic<Discount>(
-        `/discount/get/${discount_id}`
+        `/discount/get/${discount_id}`,
+        "product"
       );
       setDiscountData(response);
     } catch (error) {
@@ -76,7 +77,8 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
   const handleApplyProduct = async (productId: string) => {
     try {
       await put(
-        `/discount/apply/products/${productId}/discounts/${discount_id}`
+        `/discount/apply/products/${productId}/discounts/${discount_id}`,
+        "product"
       );
       toast.success("Product applied to discount successfully");
     } catch (error) {
@@ -88,7 +90,8 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
   const handleCancelProduct = async (productId: string) => {
     try {
       await put(
-        `/discount/remove/products/${productId}/discounts/${discount_id}`
+        `/discount/remove/products/${productId}/discounts/${discount_id}`,
+        "product"
       );
       toast.success("Product removed from discount successfully");
     } catch (error) {

@@ -33,7 +33,7 @@ const LoginPage: React.FC = () => {
 
   const handleLogin = async () => {
     try {
-      const data = await postPublic("/auth/login", {
+      const data = await postPublic("/auth/login", "user", {
         ...credentials,
         role: "seller",
       });
@@ -56,7 +56,7 @@ const LoginPage: React.FC = () => {
 
   const handleForgotPassword = async () => {
     try {
-      await postPublic("/user/forget/password", {
+      await postPublic("/user/forget/password", "user", {
         email: forgotPasswordEmail,
         role: "seller",
       });
@@ -70,7 +70,11 @@ const LoginPage: React.FC = () => {
 
   const handleResetPassword = async () => {
     try {
-      await postPublic("/user/update/forget-password", resetPasswordData);
+      await postPublic(
+        "/user/update/forget-password",
+        "user",
+        resetPasswordData
+      );
       toast.success("Password reset successful!");
       window.location.reload();
     } catch (error) {

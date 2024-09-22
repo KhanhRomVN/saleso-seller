@@ -51,7 +51,7 @@ const RegisterPage: React.FC = () => {
       const endpoint = parentId
         ? `/category/children-of-parent/${parentId}`
         : `/category/level/1`;
-      const data = await getPublic<Category[]>(endpoint);
+      const data = await getPublic<Category[]>(endpoint, "product");
       setCategories(data);
       setCurrentParentCategory(parentId || null);
     } catch (error) {
@@ -61,7 +61,7 @@ const RegisterPage: React.FC = () => {
 
   const handleEmailSubmit = async () => {
     try {
-      await postPublic("/auth/email-verify", {
+      await postPublic("/auth/email-verify", "user", {
         email,
         role: "seller",
       });
@@ -74,7 +74,7 @@ const RegisterPage: React.FC = () => {
 
   const handleOTPSubmit = async () => {
     try {
-      const response = await postPublic("/auth/register-otp", {
+      const response = await postPublic("/auth/register-otp", "user", {
         email,
         otp,
         username,
@@ -90,7 +90,7 @@ const RegisterPage: React.FC = () => {
 
   const handleDetailsSubmit = async () => {
     try {
-      await postPublic("/user/create/user-detail/seller", {
+      await postPublic("/user/create/user-detail/seller", "user", {
         seller_id: sellerId,
         brand_name: brandName,
         contact_email: contactEmail,

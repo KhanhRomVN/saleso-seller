@@ -42,12 +42,11 @@ const ProductManagementPage: React.FC = () => {
   };
 
   const handleChangeStatus = async (productId: string) => {
-    await put<{ message: any }>(`/product/toggle/${productId}`, {});
+    await put<{ message: any }>(`/product/toggle/${productId}`, "product", {});
   };
 
   const handleDelete = async (productId: string) => {
     console.log(`Deleting product ${productId}`);
-    // Implement delete logic here
   };
 
   const actions = [

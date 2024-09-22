@@ -69,7 +69,11 @@ const ProductTable: React.FC<ProductTableProps> = ({
     const fetchProducts = async () => {
       try {
         setIsLoading(true);
-        const response = await post<Product[]>("/product/by-seller", {});
+        const response = await post<Product[]>(
+          "/product/by-seller",
+          "product",
+          {}
+        );
         console.log(response);
 
         setProducts(response);

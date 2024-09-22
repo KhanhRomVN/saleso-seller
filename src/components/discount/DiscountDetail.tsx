@@ -39,6 +39,7 @@ const DiscountDetail: React.FC<DiscountDetailProps> = ({ discountData }) => {
     try {
       const response = await put<{ message: any }>(
         `/discount/${discountData._id}/status`,
+        "product",
         {}
       );
 
@@ -57,7 +58,7 @@ const DiscountDetail: React.FC<DiscountDetailProps> = ({ discountData }) => {
       try {
         const response = await del<{ message: any }>(
           `/discount/${discountData._id}`,
-          {}
+          "product"
         );
 
         if (response) {
