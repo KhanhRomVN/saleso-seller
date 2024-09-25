@@ -1,12 +1,35 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tag, Box, BarChart2 } from "lucide-react";
+import { Tag, Box, BarChart2, Users, ShoppingBag } from "lucide-react";
 import ProductTable from "../product/ProductTable";
 import DiscountDetail from "./DiscountDetail";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getPublic, put } from "@/utils/authUtils";
+import { get, getPublic, put } from "@/utils/authUtils";
+import { Bar, Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  PointElement,
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  PointElement
+);
 
 interface Discount {
   _id: string;
@@ -49,15 +72,28 @@ interface DiscountTicketDialogProps {
   onClose: () => void;
 }
 
+interface AnalyticData {
+  _id: string;
+  customer_id: string;
+  discount_id: string;
+  product_id: string;
+  discount_cost: number;
+  year: number;
+  month: number;
+  applied_at: string;
+}
+
 const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
   discount_id,
   isOpen,
 }) => {
   const [discountData, setDiscountData] = useState<Discount | null>(null);
+  const [analyticData, setAnalyticData] = useState<AnalyticData[]>([]);
 
   useEffect(() => {
     if (isOpen) {
       fetchDiscountData();
+      fetchAnalyticData();
     }
   }, [isOpen]);
 
@@ -71,6 +107,19 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
     } catch (error) {
       console.error("Error fetching discount data:", error);
       toast.error("Failed to fetch discount data");
+    }
+  };
+
+  const fetchAnalyticData = async () => {
+    try {
+      const response = await get<AnalyticData[]>(
+        `/discount_usage/${discount_id}`,
+        "product"
+      );
+      setAnalyticData(response);
+    } catch (error) {
+      console.error("Error fetching analytic data:", error);
+      toast.error("Failed to fetch analytic data");
     }
   };
 
@@ -98,6 +147,99 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
       console.error("Error removing product from discount:", error);
       toast.error("Failed to remove product from discount");
     }
+  };
+
+  const analyticStats = useMemo(() => {
+    if (analyticData.length === 0) return null;
+
+    const totalUsage = analyticData.length;
+    const totalDiscountCost = analyticData.reduce(
+      (sum, data) => sum + data.discount_cost,
+      0
+    );
+
+    const usageByMonth = analyticData.reduce((acc, data) => {
+      const key = `${data.year}-${data.month.toString().padStart(2, "0")}`;
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const costByMonth = analyticData.reduce((acc, data) => {
+      const key = `${data.year}-${data.month.toString().padStart(2, "0")}`;
+      acc[key] = (acc[key] || 0) + data.discount_cost;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const customerUsage = analyticData.reduce((acc, data) => {
+      acc[data.customer_id] = (acc[data.customer_id] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const productUsage = analyticData.reduce((acc, data) => {
+      acc[data.product_id] = (acc[data.product_id] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const topCustomers = Object.entries(customerUsage)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+
+    const topProducts = Object.entries(productUsage)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+
+    return {
+      totalUsage,
+      totalDiscountCost,
+      usageByMonth,
+      costByMonth,
+      topCustomers,
+      topProducts,
+    };
+  }, [analyticData]);
+
+  const usageChartData = {
+    labels: Object.keys(analyticStats?.usageByMonth || {}),
+    datasets: [
+      {
+        label: "Usage Count",
+        data: Object.values(analyticStats?.usageByMonth || {}),
+        backgroundColor: "rgba(75, 192, 192, 0.6)",
+      },
+    ],
+  };
+
+  const costChartData = {
+    labels: Object.keys(analyticStats?.costByMonth || {}),
+    datasets: [
+      {
+        label: "Discount Cost",
+        data: Object.values(analyticStats?.costByMonth || {}),
+        backgroundColor: "rgba(255, 99, 132, 0.6)",
+      },
+    ],
+  };
+
+  const topCustomersChartData = {
+    labels: analyticStats?.topCustomers.map(([id]) => id) || [],
+    datasets: [
+      {
+        label: "Usage Count",
+        data: analyticStats?.topCustomers.map(([, count]) => count) || [],
+        backgroundColor: "rgba(54, 162, 235, 0.6)",
+      },
+    ],
+  };
+
+  const topProductsChartData = {
+    labels: analyticStats?.topProducts.map(([id]) => id) || [],
+    datasets: [
+      {
+        label: "Usage Count",
+        data: analyticStats?.topProducts.map(([, count]) => count) || [],
+        backgroundColor: "rgba(255, 206, 86, 0.6)",
+      },
+    ],
   };
 
   if (!discountData) return null;
@@ -155,7 +297,52 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
             </TabsContent>
 
             <TabsContent value="analytic">
-              <p>Analytic data will be displayed here.</p>
+              {analyticStats ? (
+                <Tabs defaultValue="usageByMonth">
+                  <TabsList>
+                    <TabsTrigger value="usageByMonth">
+                      <BarChart2 className="mr-2" />
+                      Usage by Month
+                    </TabsTrigger>
+                    <TabsTrigger value="costByMonth">
+                      <BarChart2 className="mr-2" />
+                      Cost by Month
+                    </TabsTrigger>
+                    <TabsTrigger value="topCustomers">
+                      <Users className="mr-2" />
+                      Top Customers
+                    </TabsTrigger>
+                    <TabsTrigger value="topProducts">
+                      <ShoppingBag className="mr-2" />
+                      Top Products
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="usageByMonth">
+                    <h4 className="text-xl font-bold mb-2">Usage by Month</h4>
+                    <Bar data={usageChartData} />
+                  </TabsContent>
+
+                  <TabsContent value="costByMonth">
+                    <h4 className="text-xl font-bold mb-2">
+                      Discount Cost by Month
+                    </h4>
+                    <Bar data={costChartData} />
+                  </TabsContent>
+
+                  <TabsContent value="topCustomers">
+                    <h4 className="text-xl font-bold mb-2">Top 10 Customers</h4>
+                    <Bar data={topCustomersChartData} />
+                  </TabsContent>
+
+                  <TabsContent value="topProducts">
+                    <h4 className="text-xl font-bold mb-2">Top 10 Products</h4>
+                    <Bar data={topProductsChartData} />
+                  </TabsContent>
+                </Tabs>
+              ) : (
+                <p>No analytic data available.</p>
+              )}
             </TabsContent>
           </Tabs>
           <ToastContainer position="bottom-right" />

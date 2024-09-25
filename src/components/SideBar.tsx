@@ -28,7 +28,7 @@ const menuItems = [
     category: "Main",
     items: [
       {
-        path: "/dashboard",
+        path: "/",
         icon: <LayoutDashboard className="h-4 w-4" />,
         text: "Dashboard",
       },
@@ -68,7 +68,7 @@ const menuItems = [
     category: "Support",
     items: [
       {
-        path: "/messages",
+        path: "/message",
         icon: <MessageSquare className="h-4 w-4" />,
         text: "Messages",
       },
@@ -78,7 +78,7 @@ const menuItems = [
     category: "Settings",
     items: [
       {
-        path: "/settings",
+        path: "/setting/account",
         icon: <Settings className="h-4 w-4" />,
         text: "Settings",
       },

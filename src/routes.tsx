@@ -1,4 +1,3 @@
-import HomePage from "@/pages/HomePage";
 import EmailPage from "./pages/RegisterPage";
 import LoginPage from "@/pages/LoginPage";
 import AddProductPage from "./pages/Product/AddProductPage";
@@ -6,11 +5,19 @@ import EditProductPage from "./pages/Product/EditProductPage";
 import ProductManagementPage from "./pages/Product/ProductManagementPage";
 import DiscountPage from "@/pages/DiscountPage";
 import FeedbackPage from "./pages/FeedbackPage";
-import SettingPage from "./pages/SettingPage";
+import OrderManagementPage from "./pages/OrderManagementPage";
 import OrderPage from "./pages/OrderPage";
 import ReversalPage from "./pages/ReversalPage";
-
+import MessagePage from "./pages/MessagePage";
+import DashboardPage from "./pages/DashboardPage";
+import AnalyticPage from "./pages/AnalyticPage";
+import AccountContentPage from "./pages/Setting/AccountContentPage";
 import DefaultLayout from "@/layout/defaultLayout";
+import SettingLayout from "./layout/settingLayout";
+import AddressContentPage from "@/pages/Setting/AddressContentPage";
+import NotificationContentPage from "@/pages/Setting/NotificationContentPage";
+import OtherContentPage from "@/pages/Setting/OtherContentPage";
+import PaymentContentPage from "@/pages/Setting/PaymentContentPage";
 
 const publicRoutes = [
   {
@@ -25,7 +32,15 @@ const publicRoutes = [
     path: "/",
     element: (
       <DefaultLayout>
-        <HomePage />
+        <DashboardPage />
+      </DefaultLayout>
+    ),
+  },
+  {
+    path: "/analytics",
+    element: (
+      <DefaultLayout>
+        <AnalyticPage />
       </DefaultLayout>
     ),
   },
@@ -73,15 +88,15 @@ const publicRoutes = [
     path: "/order/management",
     element: (
       <DefaultLayout>
-        <OrderPage />
+        <OrderManagementPage />
       </DefaultLayout>
     ),
   },
   {
-    path: "/setting",
+    path: "/order/:order_id",
     element: (
       <DefaultLayout>
-        <SettingPage />
+        <OrderPage />
       </DefaultLayout>
     ),
   },
@@ -90,6 +105,72 @@ const publicRoutes = [
     element: (
       <DefaultLayout>
         <ReversalPage />
+      </DefaultLayout>
+    ),
+  },
+  {
+    path: "/message",
+    element: (
+      <DefaultLayout>
+        <MessagePage />
+      </DefaultLayout>
+    ),
+  },
+  {
+    path: "/message/:conversation_id",
+    element: (
+      <DefaultLayout>
+        <MessagePage />
+      </DefaultLayout>
+    ),
+  },
+  {
+    path: "/setting/account",
+    element: (
+      <DefaultLayout>
+        <SettingLayout>
+          <AccountContentPage />
+        </SettingLayout>
+      </DefaultLayout>
+    ),
+  },
+  {
+    path: "/setting/address",
+    element: (
+      <DefaultLayout>
+        <SettingLayout>
+          <AddressContentPage />
+        </SettingLayout>
+      </DefaultLayout>
+    ),
+  },
+  {
+    path: "/setting/notification",
+    element: (
+      <DefaultLayout>
+        <SettingLayout>
+          <NotificationContentPage />
+        </SettingLayout>
+      </DefaultLayout>
+    ),
+  },
+  {
+    path: "/setting/other",
+    element: (
+      <DefaultLayout>
+        <SettingLayout>
+          <OtherContentPage />
+        </SettingLayout>
+      </DefaultLayout>
+    ),
+  },
+  {
+    path: "/setting/payment",
+    element: (
+      <DefaultLayout>
+        <SettingLayout>
+          <PaymentContentPage />
+        </SettingLayout>
       </DefaultLayout>
     ),
   },

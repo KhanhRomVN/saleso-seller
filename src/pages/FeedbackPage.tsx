@@ -102,6 +102,7 @@ export default function FeedbackPage() {
       const data = await post<Feedback[]>("/feedback/by-seller", "product", {
         product_id: selectedProduct,
       });
+      console.log(data);
       setFeedbacks(data);
     } catch (error) {
       console.error("Error fetching feedbacks:", error);
@@ -229,7 +230,7 @@ export default function FeedbackPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="mb-4">{feedback.comment}</p>
-                    {feedback.reply.comment ? (
+                    {feedback.reply ? (
                       <div className="mt-4 bg-gray-700 p-4 rounded-lg">
                         <p className="font-semibold text-blue-400 mb-2">
                           Your reply:

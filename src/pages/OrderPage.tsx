@@ -1,404 +1,431 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Package2,
-  Search,
-  ChevronDown,
-  Star,
+  Package,
+  User,
+  Clock,
+  Truck,
   DollarSign,
-  AlertCircle,
+  CreditCard,
+  Tag,
 } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { get, put } from "@/utils/authUtils";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { authUtils } from "@/utils/authUtils";
 
-interface Order {
+interface OrderData {
   _id: string;
   product_id: string;
-  product_name: string;
-  product_image: string;
-  customer_username: string;
   quantity: number;
+  sku: string;
   total_amount: number;
+  shipping_fee: number;
   shipping_address: string;
+  applied_discount: string;
+  customer_id: string;
+  seller_id: string;
   order_status: string;
+  created_at: string;
+  updated_at: string;
 }
 
-interface ProductDetails {
+interface OrderLogData {
+  _id: string;
+  order_id: string;
+  title: string;
+  content: string;
+  created_at: string;
+}
+
+interface ProductData {
   _id: string;
   name: string;
+  slug: string;
   images: string[];
+  description: string;
   address: string;
   origin: string;
+  categories: { category_id: string; category_name: string }[];
+  details: any[];
+  tags: string[];
   variants: { sku: string; stock: number; price: number }[];
-  rating: number;
+  upcoming_discounts: any[];
+  ongoing_discounts: string[];
+  expired_discounts: any[];
+  is_active: string;
+  created_at: number;
+  updated_at: string;
+  seller_id: string;
+}
+
+interface CustomerData {
+  _id: string;
+  username: string;
+  email: string;
+  role: string;
+  register_at: string;
+  last_login: string;
+  update_at: string;
+}
+
+interface PaymentData {
+  _id: string;
+  order_id: string;
+  method: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface OrderResponse {
+  orderData: OrderData;
+  orderLogData: OrderLogData[];
+  productData: ProductData;
+  customerData: CustomerData;
+  paymentData: PaymentData;
 }
 
 export default function OrderPage() {
-  const navigate = useNavigate();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState("pending");
-  const [productDetails, setProductDetails] = useState<ProductDetails | null>(
-    null
-  );
-  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState("");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [orderInfo, setOrderInfo] = useState<OrderResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { order_id } = useParams<{ order_id: string }>();
 
   useEffect(() => {
-    fetchOrders();
-  }, [selectedStatus]);
+    const fetchOrderData = async () => {
+      try {
+        const response = await authUtils.get<OrderResponse>(
+          `/order/get/${order_id}`,
+          "order"
+        );
+        setOrderInfo(response);
+        setLoading(false);
+      } catch (err) {
+        setError("Có lỗi xảy ra khi tải dữ liệu đơn hàng");
+        setLoading(false);
+      }
+    };
 
-  const fetchOrders = async () => {
-    try {
-      const data = await get<Order[]>(`/order/${selectedStatus}`, "order");
-      setOrders(data || []);
-    } catch (error) {
-      console.error("Failed to fetch orders:", error);
-      toast.error("Failed to fetch orders");
-      setOrders([]);
+    if (order_id) {
+      fetchOrderData();
     }
-  };
+  }, [order_id]);
 
-  const handleProductHover = async (productId: string) => {
-    try {
-      const data = await get<ProductDetails>(
-        `/product/by-product/${productId}`,
-        "product"
-      );
-      setProductDetails(data);
-    } catch (error) {
-      console.error("Failed to fetch product details", error);
-    }
-  };
+  if (loading) return <LoadingSkeleton />;
+  if (error) return <ErrorDisplay message={error} />;
+  if (!orderInfo) return <ErrorDisplay message="Do not have order data" />;
 
-  const handleAccept = async (orderId: string) => {
-    try {
-      await put(`/order/accept/${orderId}`, "order");
-      toast.success("Order accepted successfully");
-      fetchOrders();
-    } catch (error) {
-      console.error("Failed to accept order:", error);
-      toast.error("Failed to accept order");
-    }
-  };
-
-  const handleRefuse = async (orderId: string) => {
-    try {
-      await put(`/order/refuse/${orderId}`, "order");
-      toast.success("Order refused successfully");
-      fetchOrders();
-    } catch (error) {
-      console.error("Failed to refuse order:", error);
-      toast.error("Failed to refuse order");
-    }
-  };
-
-  const handleViewOrder = (orderId: string) => {
-    navigate(`/order/${orderId}`);
-    toast.success("Order viewed");
-  };
-
-  const uniqueCustomers = Array.from(
-    new Set(orders.map((order) => order.customer_username))
-  );
-
-  const filteredOrders = orders
-    .filter(
-      (order) =>
-        order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.product_name.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .filter((order) =>
-      selectedCustomer ? order.customer_username === selectedCustomer : true
-    )
-    .sort((a, b) =>
-      sortOrder === "asc"
-        ? a.total_amount - b.total_amount
-        : b.total_amount - a.total_amount
-    );
+  const { orderData, orderLogData, productData, customerData, paymentData } =
+    orderInfo;
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="container mx-auto p-4 text-gray-100 min-h-screen bg-gray-900"
+      transition={{ duration: 0.5 }}
+      className="container mx-auto p-6 bg-background text-foreground"
     >
-      <h1 className="text-3xl font-bold mb-6 text-blue-300">Orders</h1>
+      <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-primary to-blue-600 text-transparent bg-clip-text">
+        Chi tiết đơn hàng
+      </h1>
 
-      <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-6">
-        <div className="relative w-full sm:w-64">
-          <Input
-            type="text"
-            placeholder="Search orders..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-gray-800 border-gray-700 text-gray-100 focus:border-blue-400 w-full"
-          />
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            size={18}
-          />
-        </div>
-        <Select
-          value={selectedStatus}
-          onValueChange={(value) => setSelectedStatus(value)}
-        >
-          <SelectTrigger className="w-full sm:w-40 bg-gray-800 border-gray-700 text-gray-100">
-            <SelectValue placeholder="Select status" />
-          </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-gray-700 text-gray-100">
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="accepted">Accepted</SelectItem>
-            <SelectItem value="refused">Refused</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select
-          value={selectedCustomer}
-          onValueChange={(value) => setSelectedCustomer(value)}
-        >
-          <SelectTrigger className="w-full sm:w-48 bg-gray-800 border-gray-700 text-gray-100">
-            <SelectValue placeholder="Select customer" />
-          </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-gray-700 text-gray-100">
-            {uniqueCustomers.map((customer) => (
-              <SelectItem key={customer} value={customer}>
-                {customer}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={sortOrder}
-          onValueChange={(value: "asc" | "desc") => setSortOrder(value)}
-        >
-          <SelectTrigger className="w-full sm:w-48 bg-gray-800 border-gray-700 text-gray-100">
-            <SelectValue placeholder="Sort by price" />
-          </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-gray-700 text-gray-100">
-            <SelectItem value="asc">Price: Low to High</SelectItem>
-            <SelectItem value="desc">Price: High to Low</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <AnimatePresence>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Thông tin đơn hàng */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="overflow-x-auto"
+          whileHover={{ scale: 1.02 }}
+          transition={{ type: "spring", stiffness: 300 }}
         >
-          {filteredOrders.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-blue-900 bg-opacity-50">
-                  <TableHead className="text-blue-300">ID</TableHead>
-                  <TableHead className="text-blue-300">Product</TableHead>
-                  <TableHead className="text-blue-300 hidden sm:table-cell">
-                    Customer
-                  </TableHead>
-                  <TableHead className="text-blue-300 hidden sm:table-cell">
-                    Quantity
-                  </TableHead>
-                  <TableHead className="text-blue-300">Total</TableHead>
-                  <TableHead className="text-blue-300 hidden md:table-cell">
-                    Shipping
-                  </TableHead>
-                  <TableHead className="text-blue-300">Status</TableHead>
-                  <TableHead className="text-blue-300">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.map((order) => (
-                  <TableRow
-                    key={order._id}
-                    className="border-b border-gray-800 hover:bg-gray-800"
-                  >
-                    <TableCell className="font-medium text-purple-300">
-                      {order._id.slice(-6)}
-                    </TableCell>
-                    <TableCell
-                      onMouseEnter={() => handleProductHover(order.product_id)}
-                      onClick={() => setIsProductDialogOpen(true)}
-                      className="cursor-pointer hover:text-blue-400 transition-colors"
-                    >
-                      <div className="flex items-center">
-                        <Package2 className="w-6 h-6 mr-2 text-purple-400" />
-                        <span className="hidden sm:inline">
-                          {order.product_name}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      {order.customer_username}
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      {order.quantity}
-                    </TableCell>
-                    <TableCell className="text-green-400">
-                      ${order.total_amount}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {order.shipping_address}
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold
-                        ${
-                          order.order_status === "pending"
-                            ? "bg-yellow-600 text-yellow-100"
-                            : order.order_status === "accepted"
-                            ? "bg-green-600 text-green-100"
-                            : "bg-red-600 text-red-100"
-                        }`}
-                      >
-                        {order.order_status}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="h-8 w-8 p-0 text-gray-400 hover:text-blue-400"
-                          >
-                            <ChevronDown className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          className="bg-gray-800 border-gray-700"
-                        >
-                          {order.order_status === "pending" && (
-                            <>
-                              <DropdownMenuItem
-                                onClick={() => handleAccept(order._id)}
-                                className="text-green-400 hover:bg-gray-700"
-                              >
-                                Accept
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleRefuse(order._id)}
-                                className="text-red-400 hover:bg-gray-700"
-                              >
-                                Refuse
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                          <DropdownMenuItem
-                            onClick={() => handleViewOrder(order._id)}
-                            className="text-blue-400 hover:bg-gray-700"
-                          >
-                            View order
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-10">
-              <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-300">
-                No orders found
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                There are no orders matching your current filters.
-              </p>
-            </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
-
-      <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-        <DialogContent className="bg-gray-800 text-gray-100 border-gray-700 max-w-md mx-auto">
-          <DialogHeader>
-            <DialogTitle className="text-blue-300">Product Details</DialogTitle>
-          </DialogHeader>
-          {productDetails && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-4"
-            >
-              <img
-                src={productDetails.images[0]}
-                alt={productDetails.name}
-                className="w-full h-48 object-cover rounded-lg"
+          <Card className="bg-background_secondary">
+            <CardHeader>
+              <CardTitle className="flex items-center text-foreground">
+                <Package className="mr-2" /> Order Info
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <InfoItem
+                icon={<Clock />}
+                label="OrderID"
+                value={orderData._id}
               />
-              <p>
-                <strong className="text-purple-400">Name:</strong>{" "}
-                {productDetails.name}
-              </p>
-              <p>
-                <strong className="text-purple-400">Address:</strong>{" "}
-                {productDetails.address}
-              </p>
-              <p>
-                <strong className="text-purple-400">Origin:</strong>{" "}
-                {productDetails.origin}
-              </p>
-              <p className="flex items-center">
-                <strong className="text-purple-400 mr-2">Rating:</strong>
-                <Star className="w-5 h-5 text-yellow-400 mr-1" />
-                {productDetails.rating}
-              </p>
-              <div>
-                <h3 className="font-bold text-blue-300 mb-2">Variants:</h3>
-                <ul className="space-y-2">
-                  {productDetails.variants.map((variant, index) => (
-                    <li key={index} className="flex items-center">
-                      <DollarSign className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
-                      <span className="text-sm">
-                        SKU: {variant.sku}, Stock: {variant.stock}, Price: $
-                        {variant.price}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </motion.div>
-          )}
-        </DialogContent>
-      </Dialog>
+              <InfoItem
+                icon={
+                  <Badge
+                    className={`${getStatusColor(
+                      orderData.order_status
+                    )} text-foreground p-1 rounded-full`}
+                  />
+                }
+                label="Status"
+                value={orderData.order_status}
+              />
+              <InfoItem
+                icon={<DollarSign />}
+                label="Total"
+                value={`$${orderData.total_amount.toFixed(2)}`}
+              />
+              <InfoItem
+                icon={<Truck />}
+                label="Shipping Fee"
+                value={`$${orderData.shipping_fee.toFixed(2)}`}
+              />
+              <InfoItem
+                icon={<Truck />}
+                label="Shipping Address"
+                value={orderData.shipping_address}
+              />
+              <InfoItem
+                icon={<Clock />}
+                label="Created At"
+                value={new Date(orderData.created_at).toLocaleString()}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
 
-      <ToastContainer position="bottom-right" theme="dark" />
+        {/* Thông tin khách hàng */}
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
+          <Card className="bg-background_secondary">
+            <CardHeader>
+              <CardTitle className="flex items-center text-foreground">
+                <User className="mr-2" /> Thông tin khách hàng
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <InfoItem label="Tên" value={customerData.username} />
+              <InfoItem label="Email" value={customerData.email} />
+              <InfoItem
+                label="Ngày đăng ký"
+                value={new Date(customerData.register_at).toLocaleDateString()}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Thông tin sản phẩm */}
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          transition={{ type: "spring", stiffness: 300 }}
+          className="md:col-span-2"
+        >
+          <Card className="bg-background_secondary">
+            <CardHeader>
+              <CardTitle className="flex items-center text-foreground">
+                <Package className="mr-2" /> Thông tin sản phẩm
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-4">
+              <img
+                src={productData.images[0]}
+                alt={productData.name}
+                className="w-full md:w-1/3 h-48 object-cover rounded-md"
+              />
+              <div className="space-y-2 flex-grow">
+                <h3 className="text-xl font-semibold text-foreground">
+                  {productData.name}
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {productData.categories.map((category) => (
+                    <Badge key={category.category_id} variant="secondary">
+                      {category.category_name}
+                    </Badge>
+                  ))}
+                </div>
+                {productData.details && productData.details.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-foreground">Chi tiết:</h4>
+                    <ul className="list-disc list-inside text-foreground">
+                      {productData.details.map((detail, index) => (
+                        <li key={index}>{detail}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div>
+                  <h4 className="font-semibold text-foreground">Tags:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {productData.tags.map((tag, index) => (
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="flex items-center"
+                      >
+                        <Tag className="w-3 h-3 mr-1" />
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Biến thể:</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {productData.variants.map((variant) => (
+                      <div
+                        key={variant.sku}
+                        className="bg-background p-2 rounded"
+                      >
+                        <p className="text-foreground">SKU: {variant.sku}</p>
+                        <p className="text-foreground">Giá: ${variant.price}</p>
+                        <p className="text-foreground">
+                          Tồn kho: {variant.stock}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Lịch sử đơn hàng */}
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
+          <Card className="bg-background_secondary">
+            <CardHeader>
+              <CardTitle className="flex items-center text-foreground">
+                <Clock className="mr-2" /> Lịch sử đơn hàng
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                <Timeline logs={orderLogData} />
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Thông tin thanh toán */}
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
+          <Card className="bg-background_secondary">
+            <CardHeader>
+              <CardTitle className="flex items-center text-foreground">
+                <CreditCard className="mr-2" /> Thông tin thanh toán
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <InfoItem label="Phương thức" value={paymentData.method} />
+              <InfoItem
+                label="Trạng thái"
+                value={paymentData.status}
+                icon={
+                  <Badge
+                    className={`${getPaymentStatusColor(
+                      paymentData.status
+                    )} text-foreground p-1 rounded-full`}
+                  />
+                }
+              />
+              <InfoItem
+                label="Ngày tạo"
+                value={new Date(paymentData.created_at).toLocaleString()}
+              />
+              <InfoItem
+                label="Cập nhật lần cuối"
+                value={new Date(paymentData.updated_at).toLocaleString()}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
     </motion.div>
   );
 }
+
+const InfoItem = ({
+  icon,
+  label,
+  value,
+}: {
+  icon?: React.ReactNode;
+  label: string;
+  value: string;
+}) => (
+  <div className="flex items-center space-x-2">
+    {icon && <span className="text-muted-foreground">{icon}</span>}
+    <span className="text-muted-foreground">{label}:</span>
+    <span className="text-foreground">{value}</span>
+  </div>
+);
+
+const Timeline = ({ logs }: { logs: OrderResponse["orderLogData"] }) => (
+  <div className="relative">
+    {logs.map((log, index) => (
+      <motion.div
+        key={log._id}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: index * 0.1 }}
+        className="mb-4 flex items-center"
+      >
+        <div className="bg-primary rounded-full w-3 h-3 mr-3" />
+        <div>
+          <h3 className="font-bold text-foreground">{log.title}</h3>
+          <p className="text-sm text-muted-foreground">{log.content}</p>
+          <p className="text-xs text-muted-foreground">
+            {new Date(log.created_at).toLocaleString()}
+          </p>
+        </div>
+      </motion.div>
+    ))}
+  </div>
+);
+
+const getStatusColor = (status: string) => {
+  switch (status.toLowerCase()) {
+    case "pending":
+      return "bg-yellow-500";
+    case "processing":
+      return "bg-blue-500";
+    case "shipped":
+      return "bg-purple-500";
+    case "delivered":
+      return "bg-green-500";
+    case "cancelled":
+      return "bg-red-500";
+    default:
+      return "bg-gray-500";
+  }
+};
+
+const getPaymentStatusColor = (status: string) => {
+  switch (status.toLowerCase()) {
+    case "paid":
+      return "bg-green-500";
+    case "unpaid":
+      return "bg-red-500";
+    case "processing":
+      return "bg-yellow-500";
+    default:
+      return "bg-gray-500";
+  }
+};
+
+const LoadingSkeleton = () => (
+  <div className="container mx-auto p-6 space-y-6 bg-background">
+    <Skeleton className="h-10 w-1/4 bg-background_secondary" />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {[...Array(5)].map((_, i) => (
+        <Skeleton key={i} className="h-40 w-full bg-background_secondary" />
+      ))}
+    </div>
+  </div>
+);
+
+const ErrorDisplay = ({ message }: { message: string }) => (
+  <div className="container mx-auto p-6 text-center bg-background">
+    <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-primary to-blue-600 text-transparent bg-clip-text">
+      {message}
+    </h1>
+  </div>
+);
