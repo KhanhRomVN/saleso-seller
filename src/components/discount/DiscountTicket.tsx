@@ -90,41 +90,47 @@ const DiscountTicket: React.FC<DiscountTicketProps> = ({ discount }) => {
           className={`hover:cursor-pointer ${getBgColor()} text-white transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg`}
           onClick={() => setIsDialogOpen(true)}
         >
-          <CardHeader className="p-4">
+          <CardHeader className="p-2 sm:p-4">
             <div className="flex justify-between items-center mb-2">
               <StatusTag status={status} />
-              <Badge variant="secondary" className="bg-gray-200 text-gray-800">
+              <Badge
+                variant="secondary"
+                className="bg-gray-200 text-gray-800 text-xs sm:text-sm"
+              >
                 {discount.code}
               </Badge>
             </div>
           </CardHeader>
-          <CardContent className="p-4">
-            <p className="text-xl font-bold mb-2">{renderValue()}</p>
-            <p className="text-sm text-gray-300 mb-2">
+          <CardContent className="p-2 sm:p-4">
+            <p className="text-lg sm:text-xl font-bold mb-2">{renderValue()}</p>
+            <p className="text-xs sm:text-sm text-gray-300 mb-2">
               {discount.is_active ? "Active" : "Inactive"}
             </p>
-            <Separator className="my-3 bg-gray-600" />
-            <div className="space-y-2">
+            <Separator className="my-2 sm:my-3 bg-gray-600" />
+            <div className="space-y-1 sm:space-y-2">
               <div className="flex items-center text-xs text-gray-400">
-                <Calendar className="w-4 h-4 mr-1" />
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                 <span>
                   {formatDate(discount.start_date)} -{" "}
                   {formatDate(discount.end_date)}
                 </span>
               </div>
               <div className="flex items-center text-xs text-gray-400">
-                <Clock className="w-4 h-4 mr-1" />
+                <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                 <span>
                   {formatTime(discount.start_date)} -{" "}
                   {formatTime(discount.end_date)}
                 </span>
               </div>
-              <Progress value={Math.round(usagePercentage)} className="h-2" />
+              <Progress
+                value={Math.round(usagePercentage)}
+                className="h-1 sm:h-2"
+              />
               <p className="text-xs text-gray-400">
                 {Math.round(usagePercentage)}% used
               </p>
               <p className="text-xs text-gray-400 flex items-center">
-                <Tag className="w-4 h-4 mr-1" />
+                <Tag className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                 {applicableProductsCount} product
                 {applicableProductsCount !== 1 ? "s" : ""} applicable
               </p>
@@ -132,7 +138,7 @@ const DiscountTicket: React.FC<DiscountTicketProps> = ({ discount }) => {
           </CardContent>
         </Card>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-4xl">
         <DiscountTicketDialog
           discount_id={discount._id}
           isOpen={isDialogOpen}

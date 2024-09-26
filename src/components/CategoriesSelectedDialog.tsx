@@ -38,6 +38,8 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
   const [breadcrumbs, setBreadcrumbs] = useState<CategoryWithChildren[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] =
+    useState<CategoryWithChildren | null>(null);
 
   const fetchCategories = useCallback(async (parentId?: string) => {
     setLoading(true);
@@ -67,6 +69,7 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
   const resetDialog = useCallback(() => {
     setCategoryHierarchy([]);
     setBreadcrumbs([]);
+    setSelectedCategory(null);
     fetchCategories().then(setCurrentLevel);
   }, [fetchCategories]);
 
@@ -78,12 +81,15 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
 
   const handleCategoryClick = useCallback(
     async (category: CategoryWithChildren) => {
+      setSelectedCategory(category);
       const children = await fetchCategories(category.category_id);
       if (children.length > 0) {
         category.children = children;
         setCategoryHierarchy((prev) => [...prev, category]);
         setCurrentLevel(children);
         setBreadcrumbs((prev) => [...prev, category]);
+      } else {
+        setError("This category has no subcategories.");
       }
     },
     [fetchCategories]
@@ -98,24 +104,30 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
           ? categoryHierarchy[0].children || []
           : newBreadcrumbs[index].children || []
       );
+      setSelectedCategory(newBreadcrumbs[index]);
     },
     [breadcrumbs, categoryHierarchy]
   );
 
   const handleAddCategory = useCallback(() => {
-    const selectedCategories = breadcrumbs.map((cat) => ({
-      category_id: cat.category_id,
-      category_name: cat.category_name,
-    }));
-    onCategoriesSelected(selectedCategories);
-    onClose();
-  }, [breadcrumbs, onCategoriesSelected, onClose]);
+    if (selectedCategory) {
+      const selectedCategories = [...breadcrumbs, selectedCategory].map(
+        (cat) => ({
+          category_id: cat.category_id,
+          category_name: cat.category_name,
+        })
+      );
+      onCategoriesSelected(selectedCategories);
+      onClose();
+    }
+  }, [breadcrumbs, selectedCategory, onCategoriesSelected, onClose]);
 
   const handleBack = useCallback(() => {
     if (breadcrumbs.length > 1) {
       const newBreadcrumbs = breadcrumbs.slice(0, -1);
       setBreadcrumbs(newBreadcrumbs);
       setCurrentLevel(newBreadcrumbs[newBreadcrumbs.length - 1].children || []);
+      setSelectedCategory(newBreadcrumbs[newBreadcrumbs.length - 1]);
     } else {
       resetDialog();
     }
@@ -128,71 +140,78 @@ const CategoriesSelectedDialog: React.FC<Props> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleCloseDialog}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[90vw] md:max-w-[600px] lg:max-w-[800px] h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
+          <DialogTitle className="text-xl sm:text-2xl font-bold">
             Select Category
           </DialogTitle>
         </DialogHeader>
-        <div className="flex items-center space-x-2 mb-4 overflow-x-auto py-2">
+        <div className="flex items-center space-x-2 mb-4 overflow-x-auto py-2 text-sm sm:text-base">
           {breadcrumbs.map((crumb, index) => (
             <React.Fragment key={crumb.category_id}>
-              {index > 0 && <ChevronRight className="h-4 w-4 text-gray-400" />}
+              {index > 0 && (
+                <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
+              )}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => handleBreadcrumbClick(index)}
-                className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                className="text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-800 px-1 sm:px-2"
               >
                 {crumb.category_name}
               </Button>
             </React.Fragment>
           ))}
         </div>
-        <ScrollArea className="mt-2 max-h-[400px] pr-4 border rounded-md">
+        <ScrollArea className="flex-grow mt-2 pr-4 border rounded-md">
           {loading ? (
             <div className="flex justify-center items-center h-[200px]">
               <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
             </div>
           ) : error ? (
-            <p className="text-red-500 p-4">{error}</p>
+            <p className="text-yellow-500 p-4">{error}</p>
           ) : (
-            <ul className="space-y-2 p-4">
+            <ul className="space-y-2 p-2 sm:p-4">
               {currentLevel.map((category) => (
                 <li
                   key={category.category_id}
-                  className="py-3 px-4 hover:bg-gray-100 cursor-pointer rounded-md transition-colors duration-200"
+                  className={`py-2 sm:py-3 px-2 sm:px-4 hover:bg-gray-100 cursor-pointer rounded-md transition-colors duration-200 ${
+                    selectedCategory?.category_id === category.category_id
+                      ? "bg-blue-100"
+                      : ""
+                  }`}
                   onClick={() => handleCategoryClick(category)}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <FolderIcon className="h-5 w-5 text-yellow-500" />
-                      <span className="font-medium">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <FolderIcon className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
+                      <span className="text-sm sm:text-base font-medium">
                         {category.category_name}
                       </span>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                   </div>
                 </li>
               ))}
             </ul>
           )}
         </ScrollArea>
-        <DialogFooter className="flex justify-between mt-6">
+        <DialogFooter className="flex justify-between mt-4 sm:mt-6">
           <Button
             onClick={handleBack}
             disabled={breadcrumbs.length === 0}
             variant="outline"
-            className="flex items-center"
+            className="flex items-center text-sm sm:text-base"
           >
-            <ChevronLeft className="h-4 w-4 mr-2" />
+            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             Back
           </Button>
           <Button
             onClick={handleAddCategory}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            disabled={!selectedCategory}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base"
           >
-            Add Selected Categories
+            Add Selected Category
           </Button>
         </DialogFooter>
       </DialogContent>

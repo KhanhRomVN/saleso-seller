@@ -71,16 +71,18 @@ const ProductManagementPage: React.FC = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="container mx-auto p-6 text-gray-100"
+      className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-gray-100"
     >
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-100">Product Management</h1>
-        <div className="space-x-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-100">
+          Product Management
+        </h1>
+        <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
           <Button
             onClick={handleRefresh}
             variant="outline"
             disabled={isRefreshing}
-            className="bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"
+            className="w-full sm:w-auto bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"
           >
             <RefreshCw
               className={`mr-2 h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`}
@@ -89,7 +91,7 @@ const ProductManagementPage: React.FC = () => {
           </Button>
           <Button
             onClick={handleAddProduct}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white"
           >
             <PlusCircle className="mr-2 h-5 w-5" /> Add New Product
           </Button>
@@ -101,7 +103,9 @@ const ProductManagementPage: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="bg-gray-800 shadow-xl rounded-lg overflow-hidden"
       >
-        <ProductTable columns={columns} actions={actions} />
+        <div className="overflow-x-auto">
+          <ProductTable columns={columns} actions={actions} />
+        </div>
       </motion.div>
     </motion.div>
   );

@@ -131,11 +131,13 @@ const DiscountPage: React.FC = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex justify-between items-center mb-6"
+        className="flex flex-col sm:flex-row justify-between items-center mb-6"
       >
-        <h1 className="text-3xl font-bold">Discount Management</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-0">
+          Discount Management
+        </h1>
         <Button
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 w-full sm:w-auto"
           onClick={() => setIsDialogOpen(true)}
         >
           <PlusCircle size={20} />
@@ -146,9 +148,13 @@ const DiscountPage: React.FC = () => {
       {error && <p className="text-center text-red-500">{error}</p>}
       {!loading && !error && (
         <Tabs defaultValue="All" className="w-full">
-          <TabsList className="flex flex-wrap justify-start mb-4">
+          <TabsList className="flex flex-wrap justify-start mb-4 overflow-x-auto">
             {tabItems.map((item) => (
-              <TabsTrigger key={item} value={item} className="px-4 py-2 m-1">
+              <TabsTrigger
+                key={item}
+                value={item}
+                className="px-2 sm:px-4 py-2 m-1 text-xs sm:text-sm"
+              >
                 {item}
               </TabsTrigger>
             ))}

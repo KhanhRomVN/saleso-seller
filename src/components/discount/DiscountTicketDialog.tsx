@@ -7,7 +7,7 @@ import DiscountDetail from "./DiscountDetail";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { get, getPublic, put } from "@/utils/authUtils";
-import { Bar, Line } from "react-chartjs-2";
+import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -267,19 +267,29 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.3 }}
+          className="max-h-[80vh] overflow-y-auto"
         >
-          <Tabs defaultValue="discountData">
-            <TabsList>
-              <TabsTrigger value="discountData">
-                <Tag className="mr-2" />
+          <Tabs defaultValue="discountData" className="w-full">
+            <TabsList className="flex flex-wrap justify-start mb-4">
+              <TabsTrigger
+                value="discountData"
+                className="text-xs sm:text-sm px-2 py-1 sm:px-4 sm:py-2"
+              >
+                <Tag className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4" />
                 Discount Data
               </TabsTrigger>
-              <TabsTrigger value="applyProduct">
-                <Box className="mr-2" />
+              <TabsTrigger
+                value="applyProduct"
+                className="text-xs sm:text-sm px-2 py-1 sm:px-4 sm:py-2"
+              >
+                <Box className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4" />
                 Apply Product
               </TabsTrigger>
-              <TabsTrigger value="analytic">
-                <BarChart2 className="mr-2" />
+              <TabsTrigger
+                value="analytic"
+                className="text-xs sm:text-sm px-2 py-1 sm:px-4 sm:py-2"
+              >
+                <BarChart2 className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4" />
                 Analytic
               </TabsTrigger>
             </TabsList>
@@ -298,46 +308,96 @@ const DiscountTicketDialog: React.FC<DiscountTicketDialogProps> = ({
 
             <TabsContent value="analytic">
               {analyticStats ? (
-                <Tabs defaultValue="usageByMonth">
-                  <TabsList>
-                    <TabsTrigger value="usageByMonth">
-                      <BarChart2 className="mr-2" />
+                <Tabs defaultValue="usageByMonth" className="w-full">
+                  <TabsList className="flex flex-wrap justify-start mb-4">
+                    <TabsTrigger
+                      value="usageByMonth"
+                      className="text-xs sm:text-sm px-2 py-1 sm:px-4 sm:py-2"
+                    >
+                      <BarChart2 className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4" />
                       Usage by Month
                     </TabsTrigger>
-                    <TabsTrigger value="costByMonth">
-                      <BarChart2 className="mr-2" />
+                    <TabsTrigger
+                      value="costByMonth"
+                      className="text-xs sm:text-sm px-2 py-1 sm:px-4 sm:py-2"
+                    >
+                      <BarChart2 className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4" />
                       Cost by Month
                     </TabsTrigger>
-                    <TabsTrigger value="topCustomers">
-                      <Users className="mr-2" />
+                    <TabsTrigger
+                      value="topCustomers"
+                      className="text-xs sm:text-sm px-2 py-1 sm:px-4 sm:py-2"
+                    >
+                      <Users className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4" />
                       Top Customers
                     </TabsTrigger>
-                    <TabsTrigger value="topProducts">
-                      <ShoppingBag className="mr-2" />
+                    <TabsTrigger
+                      value="topProducts"
+                      className="text-xs sm:text-sm px-2 py-1 sm:px-4 sm:py-2"
+                    >
+                      <ShoppingBag className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4" />
                       Top Products
                     </TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="usageByMonth">
-                    <h4 className="text-xl font-bold mb-2">Usage by Month</h4>
-                    <Bar data={usageChartData} />
+                    <h4 className="text-lg sm:text-xl font-bold mb-2">
+                      Usage by Month
+                    </h4>
+                    <div className="w-full h-[300px] sm:h-[400px]">
+                      <Bar
+                        data={usageChartData}
+                        options={{
+                          maintainAspectRatio: false,
+                          responsive: true,
+                        }}
+                      />
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="costByMonth">
-                    <h4 className="text-xl font-bold mb-2">
+                    <h4 className="text-lg sm:text-xl font-bold mb-2">
                       Discount Cost by Month
                     </h4>
-                    <Bar data={costChartData} />
+                    <div className="w-full h-[300px] sm:h-[400px]">
+                      <Bar
+                        data={costChartData}
+                        options={{
+                          maintainAspectRatio: false,
+                          responsive: true,
+                        }}
+                      />
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="topCustomers">
-                    <h4 className="text-xl font-bold mb-2">Top 10 Customers</h4>
-                    <Bar data={topCustomersChartData} />
+                    <h4 className="text-lg sm:text-xl font-bold mb-2">
+                      Top 10 Customers
+                    </h4>
+                    <div className="w-full h-[300px] sm:h-[400px]">
+                      <Bar
+                        data={topCustomersChartData}
+                        options={{
+                          maintainAspectRatio: false,
+                          responsive: true,
+                        }}
+                      />
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="topProducts">
-                    <h4 className="text-xl font-bold mb-2">Top 10 Products</h4>
-                    <Bar data={topProductsChartData} />
+                    <h4 className="text-lg sm:text-xl font-bold mb-2">
+                      Top 10 Products
+                    </h4>
+                    <div className="w-full h-[300px] sm:h-[400px]">
+                      <Bar
+                        data={topProductsChartData}
+                        options={{
+                          maintainAspectRatio: false,
+                          responsive: true,
+                        }}
+                      />
+                    </div>
                   </TabsContent>
                 </Tabs>
               ) : (

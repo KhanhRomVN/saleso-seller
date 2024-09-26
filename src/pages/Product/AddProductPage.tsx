@@ -157,7 +157,7 @@ const AddProductPage: React.FC = () => {
 
   return (
     <motion.div
-      className="flex flex-col gap-4 p-2 "
+      className="flex flex-col gap-4 p-2 max-w-7xl mx-auto"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -174,12 +174,15 @@ const AddProductPage: React.FC = () => {
       </motion.div>
 
       <motion.div
-        className="flex justify-between gap-4"
+        className="flex flex-col lg:flex-row justify-between gap-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <motion.div className="w-[40%] flex flex-col gap-4" {...fadeInUp}>
+        <motion.div
+          className="w-full lg:w-[40%] flex flex-col gap-4"
+          {...fadeInUp}
+        >
           {/* Image Upload */}
           <motion.div
             className="bg-background_secondary p-4 rounded-lg shadow-md"
@@ -300,7 +303,7 @@ const AddProductPage: React.FC = () => {
           </motion.div>
 
           {/* Product Actions */}
-          <div className="flex justify-around w-full gap-2">
+          <div className="flex flex-col sm:flex-row justify-around w-full gap-2">
             <Button
               variant="destructive"
               className="flex-1"
@@ -331,7 +334,7 @@ const AddProductPage: React.FC = () => {
         </motion.div>
 
         <motion.div
-          className="w-[60%]"
+          className="w-full lg:w-[60%]"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}

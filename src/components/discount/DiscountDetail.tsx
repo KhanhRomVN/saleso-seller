@@ -75,13 +75,12 @@ const DiscountDetail: React.FC<DiscountDetailProps> = ({ discountData }) => {
   return (
     <Card className="w-full mx-auto bg-background_secondary">
       <CardHeader>
-        <CardTitle className="flex items-center">
+        <CardTitle className="flex items-center text-lg sm:text-xl">
           <Tag className="mr-2" />
           Discount Details
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Name & Code */}
         <div>
           <Label htmlFor="code">Code</Label>
           <motion.div
@@ -93,7 +92,7 @@ const DiscountDetail: React.FC<DiscountDetailProps> = ({ discountData }) => {
           </motion.div>
         </div>
         {/* Type & Value */}
-        <motion.div className="grid grid-cols-2 gap-4" layout>
+        <motion.div className="grid grid-cols-1 sm:grid-cols-2 gap-4" layout>
           <div>
             <Label htmlFor="type">Type</Label>
             <Input id="type" name="type" value={discountData.type} readOnly />

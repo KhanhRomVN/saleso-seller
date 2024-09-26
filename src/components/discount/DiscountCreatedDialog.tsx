@@ -164,15 +164,15 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">
+            <DialogTitle className="text-xl sm:text-2xl font-bold">
               New Discount
             </DialogTitle>
           </DialogHeader>
           <motion.form
             onSubmit={handleSubmit}
-            className="space-y-6"
+            className="space-y-4 sm:space-y-6"
             {...formAnimation}
           >
             <AnimatePresence>
@@ -192,9 +192,15 @@ const DiscountCreatedDialog: React.FC<DiscountCreatedDialogProps> = ({
             </AnimatePresence>
             <Tabs defaultValue="basic" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                <TabsTrigger value="conditions">Conditions</TabsTrigger>
-                <TabsTrigger value="limitations">Limitations</TabsTrigger>
+                <TabsTrigger value="basic" className="text-xs sm:text-sm">
+                  Basic Info
+                </TabsTrigger>
+                <TabsTrigger value="conditions" className="text-xs sm:text-sm">
+                  Conditions
+                </TabsTrigger>
+                <TabsTrigger value="limitations" className="text-xs sm:text-sm">
+                  Limitations
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="basic" className="space-y-4 mt-4">
                 <motion.div
